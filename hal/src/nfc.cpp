@@ -200,19 +200,19 @@ void NFCBoard::writeI2cReg(int i2cFileDesc, unsigned char content[], int length)
 
 void NFCBoard::readI2cReg(int i2cFileDesc, unsigned char *buffer, int length)
 {
-	for(int i=0; i<length; i++) {
-		// To read a register, must first write the address
-		int res = write(i2cFileDesc, &buffer[i], 1);
-		if (res != 1) {
-			std::cerr << "Unable to write i2c register" << std::endl;
+	int regAddr = 0x00;
+
+	// To read a register, must first write the address
+	int res = write(i2cFileDesc, &regAddr, 1);
+	if (res != 1) {
+		std::cerr << "Unable to write i2c register" << std::endl;
+		exit(-1);
+	}
+
+	// Now read the values into buffer
+	res = read(i2cFileDesc, buffer, length);
+	if(res != length) {
+		std::cerr << "Unable to read i2c buffer" << std::endl;
 			exit(-1);
-		}
-		
-		// Now read the value and return it
-		res = read(i2cFileDesc, buffer + i, 1);
-		if (res != 1) {
-			std::cerr << "Unable to read i2c register" << std::endl;
-			exit(-1);
-		}
 	}
 }
