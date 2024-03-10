@@ -1,6 +1,9 @@
 // Incomplete implementation of an audio mixer. Search for "REVISIT" to find things
 // which are left as incomplete.
 // Note: Generates low latency audio on BeagleBone Black; higher latency found on host.
+#include <fstream>
+#include <iostream>
+
 #include "hal/audioMixer.hpp"
 
 AudioMixer::AudioMixer() {
@@ -17,7 +20,7 @@ AudioMixer::AudioMixer() {
 	// Open the PCM output
 	int err = snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
 	if (err < 0) {
-		printf("Playback open error: %s\n", snd_strerror(err));
+		std::cerr << "Playback open error: " << snd_strerror(err) << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -30,7 +33,7 @@ AudioMixer::AudioMixer() {
 			1,			// Allow software resampling
 			50000);		// 0.05 seconds per buffer
 	if (err < 0) {
-		printf("Playback open error: %s\n", snd_strerror(err));
+		std::cerr << "Playback open error: " << snd_strerror(err) << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -57,39 +60,38 @@ void AudioMixer::readWaveFileIntoMemory(char *fileName, wavedata_t *pSound)
 	// The PCM data in a wave file starts after the header:
 	const int PCM_DATA_OFFSET = 44;
 
-	// Open the wave file
-	FILE *file = fopen(fileName, "r");
-	if (file == NULL) {
-		fprintf(stderr, "ERROR: Unable to open file %s.\n", fileName);
+	std::fstream file(fileName, std::ios::in);
+
+	if(!file.is_open()) {
+		std::cerr << "ERROR: Unable to open file " << fileName << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	// Get file size
-	fseek(file, 0, SEEK_END);
-	int sizeInBytes = ftell(file) - PCM_DATA_OFFSET;
+	file.seekg(0, std::ios::end);
+	std::streampos sizeInBytes = file.tellg();
+	file.seekg(0, std::ios::beg);
 	pSound->numSamples = sizeInBytes / SAMPLE_SIZE;
 
-	// Search to the start of the data in the file
-	fseek(file, PCM_DATA_OFFSET, SEEK_SET);
+	file.seekg(PCM_DATA_OFFSET);
+	std::streampos pcmDataSize = sizeInBytes - static_cast<std::streampos>(PCM_DATA_OFFSET);
+	pSound->numSamples = pcmDataSize / SAMPLE_SIZE;
 
 	// Allocate space to hold all PCM data
-	pSound->pData = new short[sizeInBytes / 2];
-	if (pSound->pData == 0) {
-		fprintf(stderr, "ERROR: Unable to allocate %d bytes for file %s.\n",
-				sizeInBytes, fileName);
+	pSound->pData = new short[pSound->numSamples];
+	if (!pSound->pData) {
+		std::cerr << "ERROR: Unable to allocate " << sizeInBytes << " bytes for file "
+			<< fileName << "." << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	// Read PCM data from wave file into memory
-	int samplesRead = fread(pSound->pData, SAMPLE_SIZE, pSound->numSamples, file);
-	if (samplesRead != pSound->numSamples) {
-		fprintf(stderr, "ERROR: Unable to read %d samples from file %s (read %d).\n",
-				pSound->numSamples, fileName, samplesRead);
+	file.read(reinterpret_cast<char*>(pSound->pData), SAMPLE_SIZE * pSound->numSamples);
+	if (!file) {
+		std::cerr << "ERROR: Unable to read " << pSound->numSamples << " samples from file "
+			<< fileName << "." << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	//Close the wave file
-	fclose(file);
+	file.close();
 }
 
 void AudioMixer::freeWaveFileData(wavedata_t *pSound)
@@ -143,7 +145,7 @@ void AudioMixer::queueSound(wavedata_t *pSound)
 }
 
 AudioMixer::~AudioMixer() {
-	printf("Stopping audio...\n");
+	std::cout << "Stopping audio..." << std::endl;
 
 	for(int ind = 0; ind > MAX_SOUND_BITES; ind++) {
 		if(soundBites[ind].pSound == NULL) {
@@ -165,7 +167,7 @@ AudioMixer::~AudioMixer() {
 	delete[] playbackBuffer;
 	playbackBuffer = NULL;
 
-	printf("Done stopping audio...\n");
+	std::cout << "Done stopping audio..." << std::endl;
 	fflush(stdout);
 }
 
@@ -184,7 +186,7 @@ void AudioMixer::setVolume(int newVolume)
 {
 	// Ensure volume is reasonable; If so, cache it for later getVolume() calls.
 	if (newVolume < 0 || newVolume > AUDIOMIXER_MAX_VOLUME) {
-		printf("ERROR: Volume must be between 0 and 100.\n");
+		std::cout << "ERROR: Volume must be between 0 and 100." << std::endl;
 		return;
 	}
 	volume = newVolume;
@@ -277,17 +279,17 @@ void* AudioMixer::playbackThread(void* arg)
 
 		// Check for (and handle) possible error conditions on output
 		if (frames < 0) {
-			fprintf(stderr, "AudioMixer: writei() returned %li\n", frames);
+			std::cerr << "AudioMixer: writei() returned " << frames << std::endl;
 			frames = snd_pcm_recover(handle, frames, 1);
 		}
 		if (frames < 0) {
-			fprintf(stderr, "ERROR: Failed writing audio with snd_pcm_writei(): %li\n",
-					frames);
+			std::cerr << "ERROR: Failed writing audio with snd_pcm_writei(): " 
+				<< frames << std::endl;
 			exit(EXIT_FAILURE);
 		}
 		if (frames > 0 && (unsigned long)frames < playbackBufferSize) {
-			printf("Short write (expected %li, wrote %li)\n",
-					playbackBufferSize, frames);
+			std::cerr << "Short write (expected " << playbackBufferSize
+				<< ", wrote " << frames << ")" << std::endl;
 		}
 	}
 

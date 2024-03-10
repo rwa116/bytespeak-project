@@ -3,8 +3,8 @@
 // modules and threads. Main will be waiting in a function in this module until another
 // thread from another module unlocks it (initiates shutdown)
 
-#ifndef _SHUTDOWN_H_
-#define _SHUTDOWN_H_
+#ifndef _SHUTDOWN_HPP_
+#define _SHUTDOWN_HPP_
 
 #include <stdbool.h>
 #include <pthread.h>

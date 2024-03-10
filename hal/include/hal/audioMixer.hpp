@@ -12,7 +12,7 @@
 
 #define DEFAULT_VOLUME 80
 
-#define SAMPLE_RATE 44100
+#define SAMPLE_RATE 22050
 #define NUM_CHANNELS 1
 #define SAMPLE_SIZE (sizeof(short)) // bytes per sample
 
