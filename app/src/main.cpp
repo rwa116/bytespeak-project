@@ -3,16 +3,26 @@
 
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <chrono>
+
+#include "shutdown.hpp"
+
+#include "hal/audioMixer.hpp"
 #include "hal/nfc.hpp"
 
 int main() {
-    NFCBoard pn532;
-    std::vector<unsigned char> uid = pn532.getUid();
-    std::cout << "[ ";
-    for(auto it = uid.begin(); it != uid.end(); ++it) {
-        std::cout << *it << std::endl;
+    ShutdownManager shutdownManager;
+    AudioMixer audioMixer;
+
+    char filename[] = "beatbox-wav-files/100051__menegass__gui-drum-bd-hard.wav";
+    static wavedata_t baseDrumData;
+    audioMixer.readWaveFileIntoMemory(filename, &baseDrumData);
+
+    while(true) {
+        std::this_thread::sleep_for(std::chrono::seconds(4));
+        audioMixer.queueSound(&baseDrumData);
     }
-    std::cout << "]" << std::endl;;
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+
+    shutdownManager.waitForShutdown();
 }
