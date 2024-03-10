@@ -2,9 +2,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string>
+
 #include <iostream>
-#include <fstream>
+#include <sstream>
 #include <thread>
 #include <chrono>
 
@@ -14,19 +14,18 @@ TextToSpeech::TextToSpeech() {
 TextToSpeech::~TextToSpeech() {
 }
 
-void TextToSpeech::translateToWave(char* message , char* filename) {
-    //TODO: Use strings, use fstream in runCommand()
-    char buffer[256];
-    snprintf(buffer, 256, "espeak '%s' -w %s", message, filename);
-    runCommand(buffer);
+void TextToSpeech::translateToWave(std::string message , std::string filename) {
+    std::stringstream command;
+    command << "espeak '" << message << "' -w " << filename;
+
+    runCommand(command.str());
     // Allow 1 second for espeak processing, this should be more than enough
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
-void TextToSpeech::runCommand(char* command) {
+void TextToSpeech::runCommand(std::string command) {
 
-
-    FILE *pipe = popen(command, "r");
+    FILE *pipe = popen(command.c_str(), "r");
     char buffer[1024];
 
     while (!feof(pipe) && !ferror(pipe)) {
@@ -36,7 +35,8 @@ void TextToSpeech::runCommand(char* command) {
 
     int exitCode = WEXITSTATUS(pclose(pipe));
     if (exitCode != 0) {
-        printf("Unable to execute command: %s, exit code: %d\n", command, exitCode);
+        std::cerr << "Unable to execute command: " << command 
+            << ", exit code: " << exitCode << std::endl;
         exit(1);
     }
 }

@@ -3,13 +3,15 @@
 #ifndef _TEXT_TO_SPEECH_HPP_
 #define _TEXT_TO_SPEECH_HPP_
 
+#include <string>
+
 class TextToSpeech {
 public:
     TextToSpeech();
     ~TextToSpeech();
-    void translateToWave(char *message ,char *filename);
+    void translateToWave(std::string message , std::string filename);
 private:
-    void runCommand(char* command);
+    void runCommand(std::string command);
 };
 
 #endif
