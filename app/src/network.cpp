@@ -10,6 +10,10 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#include <iostream>
+#include <sstream>
+#include <string>
+
 #include "network.hpp"
 
 Network::Network() {
@@ -75,11 +79,13 @@ void *Network::networkThread(void *arg) {
 }
 
 enum Command Network::checkCommand(char* input) {
-    char* token = strtok(input, " ");
-    if(strtok(token, "epseak") == 0) {
+    std::istringstream istream(input);
+    std::string token;
+    istream >> token;
+    if(token.find("espeak") != std::string::npos) {
         return ESPEAK;
     }
-    else if(strtok(input, "terminate") == 0) {
+    else if(token.find("terminate") != std::string::npos) {
         return TERMINATE;
     }
     else {
@@ -87,15 +93,25 @@ enum Command Network::checkCommand(char* input) {
     }
 }
 
+#define ENGLISH_MESSAGE_FILENAME "beatbox-wav-files/message.wav"
 void Network::sendReply(enum Command command, char *input, int socketDescriptor, struct sockaddr_in *sinRemote) {
     char messageTx[MAX_LEN];
     unsigned int sinLen;
 
     switch(command) {
         case ESPEAK:
-            (void)input;
-            snprintf(messageTx, MAX_LEN, "Set message to %s\n", "PLACEHOLDER");
+        {
+            char message[256];
+            char* spacePosition = strchr(input, ' ');
+            if(spacePosition != nullptr) {
+                strncpy(message, spacePosition + 1, 255);
+                message[255] = '\0';
+                textToSpeech->translateToWave(message, ENGLISH_MESSAGE_FILENAME);
+                audioMixer->readWaveFileIntoMemory(ENGLISH_MESSAGE_FILENAME, ENGLISH);
+            }
+            snprintf(messageTx, MAX_LEN, "Set message to %s\n", message);
             break;
+        }
         case TERMINATE:
             shutdownManager->signalShutdown();
             snprintf(messageTx, MAX_LEN, "Terminating\n");

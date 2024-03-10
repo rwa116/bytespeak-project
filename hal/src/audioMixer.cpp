@@ -6,16 +6,14 @@
 
 #include "hal/audioMixer.hpp"
 
+
+#define ENGLISH_DEFAULT_WAVE_FILE "beatbox-wav-files/english_default.wav"
 AudioMixer::AudioMixer() {
 	setVolume(DEFAULT_VOLUME);
 
-	// Initialize the currently active sound-bites being played
-	// REVISIT:- Implement this. Hint: set the pSound pointer to NULL for each
-	//     sound bite.
-    for (int snd = 0; snd < MAX_SOUND_BITES; snd++) {
-        soundBites[snd].pSound = NULL;
-        soundBites[snd].location = -1;
-    }
+	// Initialize the sound-bite
+	soundBite.pSound = NULL;
+	soundBite.location = -1;
 
 	// Open the PCM output
 	int err = snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
@@ -45,6 +43,9 @@ AudioMixer::AudioMixer() {
 	// ..allocate playback buffer:
 	playbackBuffer = new short[playbackBufferSize];
 
+	// SET DEFAULT MESSAGES (Pre-recorded)
+	readWaveFileIntoMemory(ENGLISH_DEFAULT_WAVE_FILE, ENGLISH);
+
 	// Launch playback thread:
 	playbackThreadId = std::thread([this]() {
         this->playbackThread(nullptr);
@@ -53,9 +54,15 @@ AudioMixer::AudioMixer() {
 
 
 // Client code must call AudioMixer_freeWaveFileData to free dynamically allocated data.
-void AudioMixer::readWaveFileIntoMemory(char *fileName, wavedata_t *pSound)
+void AudioMixer::readWaveFileIntoMemory(std::string fileName, enum Language language)
 {
-	assert(pSound);
+	wavedata_t *fetchedSound;
+	switch(language) {
+		default:
+			fetchedSound = &englishSound;
+			break;
+	}
+	assert(fetchedSound);
 
 	// The PCM data in a wave file starts after the header:
 	const int PCM_DATA_OFFSET = 44;
@@ -70,23 +77,23 @@ void AudioMixer::readWaveFileIntoMemory(char *fileName, wavedata_t *pSound)
 	file.seekg(0, std::ios::end);
 	std::streampos sizeInBytes = file.tellg();
 	file.seekg(0, std::ios::beg);
-	pSound->numSamples = sizeInBytes / SAMPLE_SIZE;
+	fetchedSound->numSamples = sizeInBytes / SAMPLE_SIZE;
 
 	file.seekg(PCM_DATA_OFFSET);
 	std::streampos pcmDataSize = sizeInBytes - static_cast<std::streampos>(PCM_DATA_OFFSET);
-	pSound->numSamples = pcmDataSize / SAMPLE_SIZE;
+	fetchedSound->numSamples = pcmDataSize / SAMPLE_SIZE;
 
 	// Allocate space to hold all PCM data
-	pSound->pData = new short[pSound->numSamples];
-	if (!pSound->pData) {
+	fetchedSound->pData = new short[fetchedSound->numSamples];
+	if (!fetchedSound->pData) {
 		std::cerr << "ERROR: Unable to allocate " << sizeInBytes << " bytes for file "
 			<< fileName << "." << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	file.read(reinterpret_cast<char*>(pSound->pData), SAMPLE_SIZE * pSound->numSamples);
+	file.read(reinterpret_cast<char*>(fetchedSound->pData), SAMPLE_SIZE * fetchedSound->numSamples);
 	if (!file) {
-		std::cerr << "ERROR: Unable to read " << pSound->numSamples << " samples from file "
+		std::cerr << "ERROR: Unable to read " << fetchedSound->numSamples << " samples from file "
 			<< fileName << "." << std::endl;
 		exit(EXIT_FAILURE);
 	}
@@ -101,57 +108,41 @@ void AudioMixer::freeWaveFileData(wavedata_t *pSound)
 	pSound->pData = NULL;
 }
 
-void AudioMixer::queueSound(wavedata_t *pSound)
+void AudioMixer::queueSound(enum Language language)
 {
 	// Check if we are stopping, if we are, cannot queue sound
 	if(stopping) {
 		return;
 	}
-	// Ensure we are only being asked to play "good" sounds:
-	assert(pSound->numSamples > 0);
-	assert(pSound->pData);
 
-	// Insert the sound by searching for an empty sound bite spot
+	// Fetch the correct sound based on desired language
+	wavedata_t *fetchedSound;
+	switch(language) {
+		default:
+			fetchedSound = &englishSound;
+	}
+
+	// Ensure we are only being asked to play "good" sounds:
+	assert(fetchedSound->numSamples > 0);
+	assert(fetchedSound->pData);
+
 	/*
-	 * 1. Since this may be called by other threads, and there is a thread
-	 *    processing the soundBites[] array, we must ensure access is threadsafe.
+	 * Since this may be called by other threads, and there is a thread
+	 * processing the soundBites[] array, we must ensure access is threadsafe.
 	 */
     pthread_mutex_lock(&audioMutex);
-    /*
-     * 2. Search through the soundBites[] array looking for a free slot.
-    */
-    for (int snd = 0; snd < MAX_SOUND_BITES; snd++) {
         /*
-        * 3. If a free slot is found, place the new sound file into that slot.
-	    *    Note: You are only copying a pointer, not the entire data of the wave file!
+        * Place the new sound file into that slot.
+	    * Note: You are only copying a pointer, not the entire data of the wave file!
         */
-        if (soundBites[snd].pSound == NULL) { // Free slot discovered
-            soundBites[snd].pSound = pSound;
-            soundBites[snd].location = 0;
-            pthread_mutex_unlock(&audioMutex);
-            return;
-        }
-    }
-
-    /*
-     * 4. After searching through all slots, if no free slot is found then print
-	 *    an error message to the console (and likely just return vs asserting/exiting
-	 *    because the application most likely doesn't want to crash just for
-	 *    not being able to play another wave file.
-    */
-    perror("No free slot available:");
-    pthread_mutex_unlock(&audioMutex);
-    return;
+	soundBite.pSound = fetchedSound;
+	soundBite.location = 0;
+	pthread_mutex_unlock(&audioMutex);
+	return;
 }
 
 AudioMixer::~AudioMixer() {
 	std::cout << "Stopping audio..." << std::endl;
-
-	for(int ind = 0; ind > MAX_SOUND_BITES; ind++) {
-		if(soundBites[ind].pSound == NULL) {
-			delete[] soundBites[ind].pSound;
-		}
-	}
 
 	// Stop the PCM generation thread
 	stopping = true;
@@ -166,6 +157,9 @@ AudioMixer::~AudioMixer() {
 	//  in addition to this by calling AudioMixer_freeWaveFileData() on that struct.)
 	delete[] playbackBuffer;
 	playbackBuffer = NULL;
+
+	// TODO: Free all sound here
+	delete[] englishSound.pData;
 
 	std::cout << "Done stopping audio..." << std::endl;
 	fflush(stdout);
@@ -227,32 +221,30 @@ void AudioMixer::fillPlaybackBuffer(short *buff, int size)
 
     pthread_mutex_lock(&audioMutex);
 
-    for (int snd = 0; snd < MAX_SOUND_BITES; snd++) {
-        bool soundFinished = false;
-        // Check if sound is waiting to be played
-        if (soundBites[snd].pSound != NULL) {
-            // Check if we have less samples left than requested buffer fill size
-            int samplesLeft = soundBites[snd].pSound->numSamples - soundBites[snd].location;
-            if(samplesLeft <= size) {
-                for (int ind=0; ind<samplesLeft; ind++) {
-                    overflowBuff[ind] += soundBites[snd].pSound->pData[soundBites[snd].location + ind];
-                }
-                soundFinished = true;
-            }
-            // Otherwise, copy full size amount, also <= above means we dont need to check for finished sound
-            else {
-                for (int ind=0; ind<size; ind++) {
-                    overflowBuff[ind] += soundBites[snd].pSound->pData[soundBites[snd].location + ind];
-                }
-                soundBites[snd].location += size;
-            }
-            // If the sound is finished, "free" it
-            if (soundFinished) {
-                soundBites[snd].pSound = NULL;
-                soundBites[snd].location = -1;
-            }
-        }
-    }
+	bool soundFinished = false;
+	// Check if sound is waiting to be played
+	if (soundBite.pSound != NULL) {
+		// Check if we have less samples left than requested buffer fill size
+		int samplesLeft = soundBite.pSound->numSamples - soundBite.location;
+		if(samplesLeft <= size) {
+			for (int ind=0; ind<samplesLeft; ind++) {
+				overflowBuff[ind] += soundBite.pSound->pData[soundBite.location + ind];
+			}
+			soundFinished = true;
+		}
+		// Otherwise, copy full size amount, also <= above means we dont need to check for finished sound
+		else {
+			for (int ind=0; ind<size; ind++) {
+				overflowBuff[ind] += soundBite.pSound->pData[soundBite.location + ind];
+			}
+			soundBite.location += size;
+		}
+		// If the sound is finished, "free" it
+		if (soundFinished) {
+			soundBite.pSound = NULL;
+			soundBite.location = -1;
+		}
+	}
 
     pthread_mutex_unlock(&audioMutex);
 

@@ -18,6 +18,10 @@
 
 #define MAX_SOUND_BITES 30
 
+enum Language {
+	ENGLISH,
+};
+
 typedef struct {
 	int numSamples;
 	short *pData;
@@ -46,11 +50,10 @@ public:
 	// Read the contents of a wave file into the pSound structure. Note that
 	// the pData pointer in this structure will be dynamically allocated in
 	// readWaveFileIntoMemory(), and is freed by calling freeWaveFileData().
-	void readWaveFileIntoMemory(char *fileName, wavedata_t *pSound);
-	void freeWaveFileData(wavedata_t *pSound);
+	void readWaveFileIntoMemory(std::string fileName, enum Language language);
 
 	// Queue up another sound bite to play as soon as possible.
-	void queueSound(wavedata_t *pSound);
+	void queueSound(enum Language language);
 
 	// Get/set the volume.
 	// setVolume() function posted by StackOverflow user "trenki" at:
@@ -62,7 +65,8 @@ private:
 	unsigned long playbackBufferSize = 0;
 	short *playbackBuffer = NULL;
 
-	playbackSound_t soundBites[MAX_SOUND_BITES];
+	wavedata_t englishSound;
+	playbackSound_t soundBite;
 
 	// Playback threading
 	void* playbackThread(void* arg);
@@ -73,6 +77,7 @@ private:
 	int volume = 0;
 
 	void fillPlaybackBuffer(short *buff, int size);
+	void freeWaveFileData(wavedata_t *pSound);
 };
 
 #endif
