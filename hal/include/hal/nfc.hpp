@@ -1,22 +1,26 @@
-// NFC Module
+#ifndef NFCREADER_H
+#define NFCREADER_H
 
-#ifndef _NFC_H_
-#define _NFC_H_
+#include <iostream>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/i2c-dev.h>
+#include <string.h>
+#include <iomanip> // For std::setw and std::setfill
 
-#include <vector>
-
-class NFCBoard {
+class NFCReader {
 public:
-    NFCBoard();
-    void sendCommand(std::vector<unsigned char> data);
-    std::vector<unsigned char> receiveData();
-    void syncPackets();
-    std::vector<unsigned char> getUid();
+    NFCReader(const char* device, int address);
+    ~NFCReader();
+    std::string waitForCardAndReadUID();
+
 private:
-    int initI2cBus(char* bus, u_int8_t address);
-    void writeI2cReg(int i2cFileDesc, unsigned char content[], int length);
-    void readI2cReg(int i2cFileDesc, unsigned char *buffer, int length);
-    int i2cDescriptor;
+    const char* device; // Assuming this is declared first
+    int fileDescriptor;
+    int address;
+    int initI2C();
+    bool sendCommandAndWaitForResponse(unsigned char* command, int commandLength, unsigned char* response, int responseLength);
 };
 
-#endif
+#endif // NFCREADER_H
