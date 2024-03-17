@@ -20,7 +20,6 @@ TextToSpeech::TextToSpeech(LanguageManager *languageManagerReference, Translator
     std::ifstream englishFile(englishFilename);
     if(!englishFile.good()) {
         std::ofstream newFile(englishFilename);
-        std::cout <<"reach" << std::endl;
         translateToWave(defaultMessage, ENGLISH, englishFilename);
     }
 
