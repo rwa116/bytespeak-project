@@ -1,218 +1,73 @@
-#include <iostream>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <linux/i2c.h>
-#include <linux/i2c-dev.h>
-
-#include <string>
-#include <thread>
-#include <chrono>
 #include "hal/nfc.hpp"
 
-
-NFCBoard::NFCBoard() {
-    char i2cBus[] = "/dev/i2c-2";
-    u_int8_t deviceAddr = 0x24;
-    // Initialize I2C2 Bus
-    i2cDescriptor = initI2cBus(i2cBus, deviceAddr);
-	std::vector<unsigned char> SAMConfiguration = {0x14, 0x01};
-	sendCommand(SAMConfiguration);
+NFCReader::NFCReader(const char* device, int address) 
+    : device(device), fileDescriptor(-1), address(address) {
+    fileDescriptor = initI2C();
 }
 
-void NFCBoard::sendCommand(std::vector<unsigned char> data) {
-	const u_int8_t length = data.size();
-	const u_int8_t checksumLcs = ~length + 1;
-	u_int8_t tfi = 0xd4;
-	u_int8_t checksumDcs = tfi;
-	for(auto it = data.begin(); it != data.end(); ++it) {
-		checksumDcs += *it;
-	}
-	unsigned char *contentBuffer = new unsigned char[data.size() + 8];
-
-	// Fill out frame
-	contentBuffer[0] = 0x00;
-	contentBuffer[1] = 0x00;
-	contentBuffer[2] = 0xFF;
-	contentBuffer[3] = length;
-	contentBuffer[4] = checksumLcs;
-	contentBuffer[5] = tfi;
-	int ind = 6;
-	for(auto it = data.begin(); it != data.end(); ++it) {
-		contentBuffer[ind] = *it;
-		ind++;
-	}
-	contentBuffer[ind] = ~checksumDcs + 1;
-	contentBuffer[ind + 1] = 0x00;
-
-	std::cout << "Size = " << data.size() << std::endl;
-	writeI2cReg(i2cDescriptor, contentBuffer, data.size() + 8);
-
-	delete[] contentBuffer;
+NFCReader::~NFCReader() {
+    if (fileDescriptor >= 0) {
+        close(fileDescriptor);
+    }
 }
 
-std::vector<unsigned char> NFCBoard::receiveData() {
-	std::vector<unsigned char> data;
-	for(int i=0; i<10; i++) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
-		unsigned char buffer[128] = {0};
-
-		readI2cReg(i2cDescriptor, buffer, 8);
-
-		//Check the received data
-		int index = 0;
-		for(int j = 0; j < 128; j++) {
-			switch(j) {
-				case 0:
-				case 1:
-					if(buffer[j] == 0x00) {
-						index++;
-						continue;
-					} else {
-						index = 0;
-					}
-					break;
-				case 2:
-					if(buffer[j] == 0xFF) {
-						index++;
-						continue;
-					}
-					else {
-						std::cerr << "Ack Response Err2" << std::endl;
-						exit(-1);
-					}
-				case 3:
-					if(buffer[j] == 0x01) {
-						std::cerr << "App Err2" << std::endl;
-						exit(-1);
-					} else {
-						u_int8_t size = buffer[j];
-						std::vector<unsigned char> data(buffer + j + 3, buffer + j + 3 + size);
-						std::cout << "Received Data: " << std::endl;
-						return data;
-					}
-				default:
-					index = 0;
-					break;
-			}
-		}
-	}
-	std::cerr << "Timeout receiving data" << std::endl;
-	exit(-1);
+int NFCReader::initI2C() {
+    int file;
+    if ((file = open(device, O_RDWR)) < 0) {
+        std::cerr << "Failed to open the I2C bus" << std::endl;
+        return -1;
+    }
+    if (ioctl(file, I2C_SLAVE, address) < 0) {
+        std::cerr << "Failed to acquire bus access and/or talk to slave." << std::endl;
+        close(file);
+        return -1;
+    }
+    return file;
 }
 
-void NFCBoard::syncPackets() {
-	std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	for(int i=0; i<5; i++){
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		unsigned char buffer[128] = {0};
+bool NFCReader::sendCommandAndWaitForResponse(unsigned char* command, int commandLength, unsigned char* response, int responseLength) {
+    if (write(fileDescriptor, command, commandLength) != commandLength) {
+        std::cerr << "Failed to write to the I2C bus." << std::endl;
+        return false;
+    }
 
-		readI2cReg(i2cDescriptor, buffer, 32);
-		for(int i=0; i<128; i++) {
-			std::cout << " " << std::hex << unsigned(buffer[i]);
-		}
-		std::cout << std::endl;
-		int index = 0;
+    usleep(25000); 
 
-		for(int j = 0; j < 128; j++) {
-			switch(j) {
-				case 0:
-				case 1:
-					if(buffer[j] == 0x00) {
-						index++;
-						continue;
-					} else {
-						index = 0;
-					}
-					break;
-				case 2:
-					if(buffer[j] == 0xFF) {
-						index++;
-						continue;
-					}
-					else {
-						std::cerr << "Ack Response Err1" << std::endl;
-						exit(-1);
-					}
-					break;
-				case 3:
-					if(buffer[j] == 0x00) {
-						return;
-					} else if(buffer[j] == 0x01) {
-						std::cerr << "App Err1" << std::endl;
-						exit(-1);
-					}
-					break;
-				default:
-					index = 0;
-					break;
-			}
-		}
-	}
-	std::cerr << "Timeout receiving data" << std::endl;
-	exit(-1);
+    if (read(fileDescriptor, response, responseLength) > 0) {
+        return true;
+    } else {
+        std::cerr << "Failed to read from the device." << std::endl;
+        return false;
+    }
 }
 
-std::vector<unsigned char> NFCBoard::getUid() {
-	std::vector<unsigned char> passiveOneTarget = {0x4A, 0x01, 0x00};
-	sendCommand(passiveOneTarget);
+std::string NFCReader::waitForCardAndReadUID() {
+        unsigned char detectCardCommand[] = {
+        0x00, // Reserved byte
+        0x00, // Reserved byte
+        0xFF, // Start of packet
+        0x04, // Packet length
+        0xFC, // Length checksum (0x100 - 0x04 = 0xFC)
+        0xD4, // Data Exchange command
+        0x4A, // InListPassiveTarget command
+        0x01, // Max number of targets
+        0x00, // Baud rate
+        0xE1, // Checksum for the command bytes (0x100 - 0x1F = 0xE1)
+    };
+    unsigned char response[256];
+    std::string uid;
 
-	syncPackets();
-	std::vector<unsigned char> response = receiveData();
-	int responseLength = response.size();
-	int index = 6;
-	std::vector<unsigned char> id;
-	int idLength = response[index];
-	index++;
-	if(index + idLength > responseLength) {;
-		return id;
-	}
-	std::vector<unsigned char> uid(response.begin() + index, response.begin() + index + idLength);
-	return uid;
-}
+    while (true) {
+        memset(response, 0, sizeof(response));
 
-int NFCBoard::initI2cBus(char *bus, u_int8_t address)
-{
-	int i2cFileDesc = open(bus, O_RDWR);
-	if (i2cFileDesc < 0) {
-		std::cout << "I2C DRV: Unable to open bus for read/write " << bus << std::endl;;
-		std::cerr << "Error is:" << std::endl;
-		exit(-1);
-	}
+        if (sendCommandAndWaitForResponse(detectCardCommand, sizeof(detectCardCommand), response, sizeof(response))) {
+            for (int i = 19; i < 23; i++) { // Assuming 4-byte UID
+                uid += (i > 19 ? ":" : "") + std::to_string((int)response[i]);
+            }
+            break;
+        }
+        sleep(1);
+    }
 
-	int result = ioctl(i2cFileDesc, I2C_SLAVE, address);
-	if (result < 0) {
-		std::cerr << "Unable to set I2C device to slave address." << std::endl;
-		exit(-1);
-	}
-	return i2cFileDesc;
-}
-
-void NFCBoard::writeI2cReg(int i2cFileDesc, unsigned char content[], int length)
-{
-	int res = write(i2cFileDesc, content, length);
-	if (res != length) {
-		std::cerr << "Unable to write i2c register" << std::endl;
-		exit(-1);
-	}
-}
-
-void NFCBoard::readI2cReg(int i2cFileDesc, unsigned char *buffer, int length)
-{
-	int regAddr = 0x00;
-
-	// To read a register, must first write the address
-	int res = write(i2cFileDesc, &regAddr, 1);
-	if (res != 1) {
-		std::cerr << "Unable to write i2c register" << std::endl;
-		exit(-1);
-	}
-
-	// Now read the values into buffer
-	res = read(i2cFileDesc, buffer, length);
-	if(res != length) {
-		std::cerr << "Unable to read i2c buffer" << std::endl;
-			exit(-1);
-	}
+    return uid;
 }
