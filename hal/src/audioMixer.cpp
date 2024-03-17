@@ -7,8 +7,8 @@
 #include "hal/audioMixer.hpp"
 
 
-#define ENGLISH_DEFAULT_WAVE_FILE "beatbox-wav-files/english_default.wav"
-AudioMixer::AudioMixer() {
+AudioMixer::AudioMixer(LanguageManager *languageManagerReference) {
+	languageManager = languageManagerReference;
 	setVolume(DEFAULT_VOLUME);
 
 	// Initialize the sound-bite
@@ -44,7 +44,9 @@ AudioMixer::AudioMixer() {
 	playbackBuffer = new short[playbackBufferSize];
 
 	// SET DEFAULT MESSAGES (Pre-recorded)
-	readWaveFileIntoMemory(ENGLISH_DEFAULT_WAVE_FILE, ENGLISH);
+	readWaveFileIntoMemory("beatbox-wav-files/english_msg.wav", ENGLISH);
+	readWaveFileIntoMemory("beatbox-wav-files/french_msg.wav", FRENCH);
+	readWaveFileIntoMemory("beatbox-wav-files/german_msg.wav", GERMAN);
 
 	// Launch playback thread:
 	playbackThreadId = std::thread([this]() {
@@ -58,11 +60,19 @@ void AudioMixer::readWaveFileIntoMemory(std::string fileName, enum Language lang
 {
 	wavedata_t *fetchedSound;
 	switch(language) {
+		case FRENCH:
+			fetchedSound = &frenchSound;
+			break;
+		case GERMAN:
+			fetchedSound = &germanSound;
+			break;
 		default:
 			fetchedSound = &englishSound;
 			break;
 	}
 	assert(fetchedSound);
+
+	pthread_mutex_lock(&audioMutex);
 
 	// The PCM data in a wave file starts after the header:
 	const int PCM_DATA_OFFSET = 44;
@@ -99,13 +109,17 @@ void AudioMixer::readWaveFileIntoMemory(std::string fileName, enum Language lang
 	}
 
 	file.close();
+
+	pthread_mutex_unlock(&audioMutex);
 }
 
 void AudioMixer::freeWaveFileData(wavedata_t *pSound)
 {
+	pthread_mutex_lock(&audioMutex);
 	pSound->numSamples = 0;
 	delete[] pSound->pData;
 	pSound->pData = NULL;
+	pthread_mutex_unlock(&audioMutex);
 }
 
 void AudioMixer::queueSound(enum Language language)
@@ -115,22 +129,29 @@ void AudioMixer::queueSound(enum Language language)
 		return;
 	}
 
-	// Fetch the correct sound based on desired language
-	wavedata_t *fetchedSound;
-	switch(language) {
-		default:
-			fetchedSound = &englishSound;
-	}
-
-	// Ensure we are only being asked to play "good" sounds:
-	assert(fetchedSound->numSamples > 0);
-	assert(fetchedSound->pData);
-
 	/*
 	 * Since this may be called by other threads, and there is a thread
 	 * processing the soundBites[] array, we must ensure access is threadsafe.
 	 */
     pthread_mutex_lock(&audioMutex);
+
+	// Fetch the correct sound based on desired language
+	wavedata_t *fetchedSound;
+	switch(language) {
+		case FRENCH:
+			fetchedSound = &frenchSound;
+			break;
+		case GERMAN:
+			fetchedSound = &germanSound;
+			break;
+		default:
+			fetchedSound = &englishSound;
+			break;
+	}
+
+	// Ensure we are only being asked to play "good" sounds:
+	assert(fetchedSound->numSamples > 0);
+	assert(fetchedSound->pData);
         /*
         * Place the new sound file into that slot.
 	    * Note: You are only copying a pointer, not the entire data of the wave file!
@@ -160,6 +181,8 @@ AudioMixer::~AudioMixer() {
 
 	// TODO: Free all sound here
 	delete[] englishSound.pData;
+	delete[] frenchSound.pData;
+	delete[] germanSound.pData;
 
 	std::cout << "Done stopping audio..." << std::endl;
 	fflush(stdout);
