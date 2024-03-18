@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<title>ByteSpeak Admin Console</title>
+	<link rel='stylesheet' href='/stylesheets/style.css'></link>
+</head>
+
+<body>
+	<div id='content'>
+		<h1>ByteSpeak Admin Console</h1>
+		<div id="left-box">
+			<h2>Devices</h2>
+			<div class="device-cell">
+				<p>Device 1 status: <b id="device-status">Online?</b></p> 
+				<input type="file" name="file" accept=".wav">
+				<h3>Volume</h3>
+				<form id="volume-form" >
+					<input type="button" id="btnVolMinus" value=" - "/>
+					<input type="text" size="3" id="volumeText" value="-" readonly/>
+					<input type="button" id="btnVolPlus" value=" + "/>
+					<span>(0 - 100)</span>
+				</form>
+				<h3>Tempo</h3>
+				<form id="tempo-form" >
+					<input type="button" id="btnTempoMinus" value=" - "/>
+					<input type="text" size="3" id="tempoText" value="-" readonly/>
+					<input type="button" id="btnTempoPlus" value=" + "/>
+					<span>(BPM)</span>
+				</form>
+				<h2>Exit</h2>
+				<input type="button" id="btnTerminate" value="Terminate Program"/>
+			</div>
+		</div>
+		<div id="error-box">
+			<h2>Server Error</h2>
+			<p>Server error detected. Please resolve error before continuing</p>
+			<p>SERVER ERROR: <span id="error-message">SOME ERROR</span></p>
+		</div>
+	</div>
+	
+	<script src='/socket.io/socket.io.js' type='text/javascript'></script>
+	<script src='http://code.jquery.com/jquery-1.8.0.min.js' type='text/javascript'></script>
+	<script src='javascripts/admin_console_ui.js' type='text/javascript'></script>
+</body>
+</html>
