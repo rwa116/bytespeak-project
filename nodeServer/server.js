@@ -5,7 +5,7 @@
 //   $ node server.js
 var PORT_NUMBER = 8088;
 
-
+// TODO: handle wav file uploads with express.js maybe?
 var http = require('http');
 var fs   = require('fs');
 var path = require('path');

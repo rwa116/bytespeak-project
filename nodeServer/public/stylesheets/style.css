@@ -63,12 +63,15 @@ h1, h2 {
 .device-cell {
 	border: solid thin black;
 	background-color: #fadfb8;
-	margin-top: 40px;
-	margin-bottom: 40px;
-	margin-left: 40px;
-	margin-right: 40px;
 	padding-left: 10px;
 	padding-right: 10px;
 	padding-bottom: 10px;
 	padding-top: 10px
+}
+
+.device-cluster {
+	margin-top: 40px;
+	margin-bottom: 40px;
+	margin-left: 40px;
+	margin-right: 40px;
 }

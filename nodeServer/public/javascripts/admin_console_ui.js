@@ -5,11 +5,14 @@
 var socket = io.connect();
 $(document).ready(function() {
 
-	window.setInterval(function() {sendRequest('uptime')}, 1000);
-	window.setInterval(function() {sendCommandViaUDP("getInfo");}, 1000);
+	// window.setInterval(function() {sendRequest('uptime')}, 1000); //for proc/uptime
+	
+	//TODO: have this return device info in a json object
+	// Then, update the UI with up-to-date device info
+	window.setInterval(function() {sendCommandViaUDP("getInfo");}, 1000); 
 
 	$('#btnTerminate').click(function(){
-		sendCommandViaUDP("stop");
+		sendCommandViaUDP("terminate");
 	});
 	
 });

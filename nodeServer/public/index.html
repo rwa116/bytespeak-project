@@ -9,26 +9,20 @@
 	<div id='content'>
 		<h1>ByteSpeak Admin Console</h1>
 		<div id="left-box">
-			<h2>Devices</h2>
-			<div class="device-cell">
-				<p>Device 1 status: <b id="device-status">Online?</b></p> 
-				<input type="file" name="file" accept=".wav">
-				<h3>Volume</h3>
-				<form id="volume-form" >
-					<input type="button" id="btnVolMinus" value=" - "/>
-					<input type="text" size="3" id="volumeText" value="-" readonly/>
-					<input type="button" id="btnVolPlus" value=" + "/>
-					<span>(0 - 100)</span>
-				</form>
-				<h3>Tempo</h3>
-				<form id="tempo-form" >
-					<input type="button" id="btnTempoMinus" value=" - "/>
-					<input type="text" size="3" id="tempoText" value="-" readonly/>
-					<input type="button" id="btnTempoPlus" value=" + "/>
-					<span>(BPM)</span>
-				</form>
-				<h2>Exit</h2>
-				<input type="button" id="btnTerminate" value="Terminate Program"/>
+			<div class="device-cluster">
+				<h3>Device 1</h3>
+				<div class="device-cell">
+					<h3>Status</h3>
+					<p>Device 1 status: <b id="device-status">Online?</b></p> 
+					<h3>Current Message</h3>
+					<p>{Insert message here}</p>
+					<h3> Upload dictation </h3>
+					<p>Note: only .wav files accepted.</p>
+					<input type="file" name="file" accept=".wav"></br>
+					<input type="submit" id="btnUpload" value="Upload!" style="margin-top: 10px;" disabled/>
+					<h3>Shutdown</h3>
+					<input type="button" id="btnTerminate" value="Terminate Program" style="margin-bottom: 10px;"/>
+				</div>
 			</div>
 		</div>
 		<div id="error-box">
