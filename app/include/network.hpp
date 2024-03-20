@@ -8,7 +8,9 @@
 #include <thread>
 #include <shutdown.hpp>
 #include <textToSpeech.hpp>
+#include <translator.hpp>
 #include <hal/audioMixer.hpp>
+#include <hal/languageManager.hpp>
 
 enum Command {
     ESPEAK,
@@ -19,12 +21,15 @@ enum Command {
 class Network {
 public:
     Network();
-    Network(ShutdownManager *shutdownInstance, TextToSpeech *textInstance, AudioMixer *audioInstance);
+    Network(ShutdownManager *shutdownInstance, LanguageManager *languageManagerInstance, TextToSpeech *textInstance, 
+            Translator *translatorInstance, AudioMixer *audioInstance);
     ~Network();
 private:
     std::thread networkThreadId;
     ShutdownManager *shutdownManager;
+    LanguageManager *languageManager;
     TextToSpeech *textToSpeech;
+    Translator *translator;
     AudioMixer *audioMixer;
 
     bool isRunning = false;

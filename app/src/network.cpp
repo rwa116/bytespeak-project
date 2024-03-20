@@ -24,10 +24,13 @@ Network::Network() {
     });
 }
 
-Network::Network(ShutdownManager *shutdownInstance, TextToSpeech *textInstance, AudioMixer *audioInstance) {
+Network::Network(ShutdownManager *shutdownInstance, LanguageManager *languageManagerInstance, TextToSpeech *textInstance, 
+            Translator *translatorInstance, AudioMixer *audioInstance) {
     isRunning = true;
     shutdownManager = shutdownInstance;
+    languageManager = languageManagerInstance;
     textToSpeech = textInstance;
+    translator = translatorInstance;
     audioMixer = audioInstance;
 
     networkThreadId = std::thread([this]() {
@@ -106,8 +109,20 @@ void Network::sendReply(enum Command command, char *input, int socketDescriptor,
             if(spacePosition != nullptr) {
                 strncpy(message, spacePosition + 1, 255);
                 message[255] = '\0';
-                textToSpeech->translateToWave(message, ENGLISH_MESSAGE_FILENAME);
-                audioMixer->readWaveFileIntoMemory(ENGLISH_MESSAGE_FILENAME, ENGLISH);
+
+                std::string englishFilename = languageManager->getWavFilename(ENGLISH);
+                textToSpeech->translateToWave(message, ENGLISH, englishFilename);
+                audioMixer->readWaveFileIntoMemory(englishFilename, ENGLISH);
+
+                std::string frenchFilename = languageManager->getWavFilename(FRENCH);
+                std::string frenchMessage = translator->translateToLanguage(message, FRENCH);
+                textToSpeech->translateToWave(frenchMessage, FRENCH, frenchFilename);
+                audioMixer->readWaveFileIntoMemory(frenchFilename, FRENCH);
+
+                std::string germanFileName = languageManager->getWavFilename(GERMAN);
+                std::string germanMessage = translator->translateToLanguage(message, GERMAN);
+                textToSpeech->translateToWave(germanMessage, GERMAN, germanFileName);
+                audioMixer->readWaveFileIntoMemory(germanFileName, GERMAN);
             }
             snprintf(messageTx, MAX_LEN, "Set message to %s\n", message);
             break;

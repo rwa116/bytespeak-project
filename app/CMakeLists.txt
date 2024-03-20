@@ -28,3 +28,10 @@ COMMAND "${CMAKE_COMMAND}" -E copy_directory
    "${CMAKE_SOURCE_DIR}/beatbox-wav-files"
    "~/cmpt433/public/myApps/beatbox-wav-files" 
 COMMENT "Copying WAVE files to public NFS directory")
+
+# Copy the translator application to NFC
+add_custom_command(TARGET byte_speaker POST_BUILD 
+COMMAND "${CMAKE_COMMAND}" -E copy
+   "${CMAKE_SOURCE_DIR}/trans"
+   "~/cmpt433/public/myApps/trans" 
+COMMENT "Copying translator application to public NFS directory")

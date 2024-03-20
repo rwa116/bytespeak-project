@@ -7,13 +7,18 @@
 #define _TEXT_TO_SPEECH_HPP_
 
 #include <string>
+#include <hal/audioMixer.hpp>
+#include <hal/languageManager.hpp>
+#include <translator.hpp>
 
 class TextToSpeech {
 public:
-    TextToSpeech();
+    TextToSpeech(LanguageManager *languageManagerReference, Translator *translatorReference);
     ~TextToSpeech();
-    void translateToWave(std::string message , std::string filename);
+    void translateToWave(std::string message, enum Language language, std::string filename);
 private:
+    LanguageManager *languageManager;
+    Translator *translator;
     void runCommand(std::string command);
 };
 

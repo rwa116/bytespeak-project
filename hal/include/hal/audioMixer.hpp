@@ -10,6 +10,8 @@
 #include <alloca.h> // needed for mixer
 #include <thread>
 
+#include <hal/languageManager.hpp>
+
 #define DEFAULT_VOLUME 80
 
 #define SAMPLE_RATE 22050
@@ -17,10 +19,6 @@
 #define SAMPLE_SIZE (sizeof(short)) // bytes per sample
 
 #define MAX_SOUND_BITES 30
-
-enum Language {
-	ENGLISH,
-};
 
 typedef struct {
 	int numSamples;
@@ -44,7 +42,7 @@ class AudioMixer {
 public:
 	// init() must be called before any other functions,
 	// cleanup() must be called last to stop playback threads and free memory.
-	AudioMixer(void);
+	AudioMixer(LanguageManager *languageManagerReference);
 	~AudioMixer(void);
 
 	// Read the contents of a wave file into the pSound structure. Note that
@@ -66,7 +64,11 @@ private:
 	short *playbackBuffer = NULL;
 
 	wavedata_t englishSound;
+	wavedata_t frenchSound;
+	wavedata_t germanSound;
 	playbackSound_t soundBite;
+
+	LanguageManager *languageManager;
 
 	// Playback threading
 	void* playbackThread(void* arg);
