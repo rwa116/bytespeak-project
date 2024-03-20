@@ -21,6 +21,8 @@ private:
     int address;
     int initI2C();
     bool sendCommandAndWaitForResponse(unsigned char* command, int commandLength, unsigned char* response, int responseLength);
+    bool clearBuffer();
+
 };
 
 #endif // NFCREADER_H

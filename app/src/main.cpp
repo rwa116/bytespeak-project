@@ -27,17 +27,39 @@ int main() {
     Network network(&shutdownManager, &languageManager, &textToSpeech, &translator, &audioMixer);
     NFCReader reader("/dev/i2c-2", 0x24);
 
+     std::this_thread::sleep_for(std::chrono::seconds(3));
+
+    bool inEnglish = false;
+    bool inFrench = false;
+
+    int counter = 0;
     // Main loop
     while(!shutdownManager.isShutdown()) {
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-        audioMixer.queueSound(ENGLISH);
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-        audioMixer.queueSound(FRENCH);
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-        audioMixer.queueSound(GERMAN);
+
         std::string uid = reader.waitForCardAndReadUID();
         std::cout << "UID = " << uid << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        // check if entry is 01:00:e1:44
+        if (uid == "01:00:e1:44" && inEnglish == false) {
+            std::cout << "UID is ENGLISH" << std::endl;
+            audioMixer.queueSound(ENGLISH);
+            inEnglish = true;
+            counter = 0;
+        } else if (uid == "01:00:e1:04" && inFrench == false){
+            std::cout << "UID is FRENCH" << std::endl;
+            audioMixer.queueSound(FRENCH);
+            inFrench = true;
+            counter = 0;
+        } 
+
+        if (counter == 2) {
+            inEnglish = false;
+            inFrench = false;
+            counter = 0;
+        }
+
+        counter++;
+        std::this_thread::sleep_for(std::chrono::seconds(3));
     }
 
     shutdownManager.waitForShutdown();
