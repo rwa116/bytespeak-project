@@ -25,6 +25,7 @@ int main() {
     AudioMixer audioMixer(&languageManager);
     ShutdownManager shutdownManager;
     Network network(&shutdownManager, &languageManager, &textToSpeech, &translator, &audioMixer);
+    NFCReader reader("/dev/i2c-2", 0x24);
 
     // Main loop
     while(!shutdownManager.isShutdown()) {
@@ -34,6 +35,9 @@ int main() {
         audioMixer.queueSound(FRENCH);
         std::this_thread::sleep_for(std::chrono::seconds(3));
         audioMixer.queueSound(GERMAN);
+        std::string uid = reader.waitForCardAndReadUID();
+        std::cout << "UID = " << uid << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     shutdownManager.waitForShutdown();
