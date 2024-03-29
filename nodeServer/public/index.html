@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<title>ByteSpeak Admin Console</title>
+	<link rel='stylesheet' href='/stylesheets/style.css'></link>
+</head>
+
+<body>
+	<div id='content'>
+		<h1>ByteSpeak Admin Console</h1>
+		<div id="left-box">
+			<div class="device-cluster">
+				<h3>Device 1</h3>
+				<div class="device-cell">
+					<h3>Status</h3>
+					<p>Device 1 status: <b id="device-status">Online?</b></p> 
+					<h3>Current Message</h3>
+					<p>{Insert message here}</p>
+					<h3> Upload dictation </h3>
+					<p>Note: only .wav files accepted.</p>
+					<input type="file" name="file" accept=".wav"></br>
+					<input type="submit" id="btnUpload" value="Upload!" style="margin-top: 10px;" disabled/>
+					<h3>Shutdown</h3>
+					<input type="button" id="btnTerminate" value="Terminate Program" style="margin-bottom: 10px;"/>
+				</div>
+			</div>
+		</div>
+		<div id="error-box">
+			<h2>Server Error</h2>
+			<p>Server error detected. Please resolve error before continuing</p>
+			<p>SERVER ERROR: <span id="error-message">SOME ERROR</span></p>
+		</div>
+	</div>
+	
+	<script src='/socket.io/socket.io.js' type='text/javascript'></script>
+	<script src='http://code.jquery.com/jquery-1.8.0.min.js' type='text/javascript'></script>
+	<script src='javascripts/admin_console_ui.js' type='text/javascript'></script>
+</body>
+</html>
