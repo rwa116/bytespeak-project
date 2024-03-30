@@ -7,6 +7,8 @@ LanguageManager::LanguageManager() {
 	audioFilenames.insert({ENGLISH, "beatbox-wav-files/english_msg.wav"});
 	audioFilenames.insert({FRENCH, "beatbox-wav-files/french_msg.wav"});
 	audioFilenames.insert({GERMAN, "beatbox-wav-files/german_msg.wav"});
+	audioFilenames.insert({CUSTOM_1, "beatbox-wav-files/custom1_msg.wav"});
+	audioFilenames.insert({CUSTOM_2, "beatbox-wav-files/custom2_msg.wav"});
 }
 
 LanguageManager::~LanguageManager() {

@@ -10,6 +10,8 @@ enum Language {
 	ENGLISH,
 	FRENCH,
 	GERMAN,
+	CUSTOM_1,
+	CUSTOM_2,
 };
 
 class LanguageManager {

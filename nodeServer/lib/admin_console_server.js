@@ -20,7 +20,46 @@ exports.listen = function(server) {
 	});
 };
 
+const MAX_PACKET_SIZE = 65000;
 function handleCommand(socket) {
+	// Passed file to relay
+	socket.on('fileUpload', function(fileData) {
+		var PORT = 12345;
+		var HOST = '127.0.0.1';
+
+		var client = dgram.createSocket('udp4');
+		console.log('Received data:', fileData);
+
+		var base64Data = fileData.substring(4); // Remove the 'cl1 ' prefix
+		var binaryData = Buffer.from(base64Data, 'base64');
+		var buffer = Buffer.from(binaryData);
+
+		var prefix = fileData.substring(0, 4);
+		let numPackets = Math.ceil(buffer.length / MAX_PACKET_SIZE);
+		var startBuffer = Buffer.from(prefix + " " + numPackets);
+
+		client.send(startBuffer, 0, startBuffer.length, PORT, HOST, function(err, bytes) {
+			if (err) {
+				throw err;
+			}
+		});
+
+		console.log("handleCommand data byteLength = " + buffer.length + " bytes\n");
+		let start = 0;
+		while (start < buffer.length) {
+			let end = Math.min(start + MAX_PACKET_SIZE, buffer.length);
+			let packet = buffer.slice(start, end);
+			client.send(packet, 0, packet.length, PORT, HOST, function(err, bytes) {
+				if (err) {
+					throw err;
+				}
+			});
+			start = end;
+		}
+
+		console.log("Sent file");
+
+	});
 	// Pased string of comamnd to relay
 	socket.on('udpCommand', function(data) {
 

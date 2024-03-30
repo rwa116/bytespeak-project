@@ -14,8 +14,16 @@
 
 enum Command {
     ESPEAK,
+    CL1,
+    CL2,
+    SENDING_DATA,
     TERMINATE,
     UNKNOWN
+};
+
+enum Mode {
+    CLINTAKE,
+    NORMAL
 };
 
 class Network {
@@ -32,10 +40,13 @@ private:
     Translator *translator;
     AudioMixer *audioMixer;
 
+    enum Mode mode = NORMAL;
+    int numPacketsLeft = 0;
+
     bool isRunning = false;
     void *networkThread(void *arg);
     enum Command checkCommand(char* input);
-    void sendReply(enum Command command, char *input, int socketDescriptor, struct sockaddr_in *sinRemote);
+    void sendReply(enum Command command, char *input, int length, int socketDescriptor, struct sockaddr_in *sinRemote);
 };
 
 #endif

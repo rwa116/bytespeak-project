@@ -66,6 +66,12 @@ void AudioMixer::readWaveFileIntoMemory(std::string fileName, enum Language lang
 		case GERMAN:
 			fetchedSound = &germanSound;
 			break;
+		case CUSTOM_1:
+			fetchedSound = &custom1Sound;
+			break;
+		case CUSTOM_2:
+			fetchedSound = &custom2Sound;
+			break;
 		default:
 			fetchedSound = &englishSound;
 			break;
@@ -144,14 +150,24 @@ void AudioMixer::queueSound(enum Language language)
 		case GERMAN:
 			fetchedSound = &germanSound;
 			break;
+		case CUSTOM_1:
+			fetchedSound = &custom1Sound;
+			break;
+		case CUSTOM_2:
+			fetchedSound = &custom2Sound;
+			break;
 		default:
 			fetchedSound = &englishSound;
 			break;
 	}
 
 	// Ensure we are only being asked to play "good" sounds:
-	assert(fetchedSound->numSamples > 0);
-	assert(fetchedSound->pData);
+	if(fetchedSound->numSamples <= 0 || !fetchedSound->pData) {
+		std::cout << "ERROR: Sound file is empty or not loaded." << std::endl;
+		pthread_mutex_unlock(&audioMutex);
+		return;
+	}
+
         /*
         * Place the new sound file into that slot.
 	    * Note: You are only copying a pointer, not the entire data of the wave file!
@@ -183,6 +199,8 @@ AudioMixer::~AudioMixer() {
 	delete[] englishSound.pData;
 	delete[] frenchSound.pData;
 	delete[] germanSound.pData;
+	delete[] custom1Sound.pData;
+	delete[] custom2Sound.pData;
 
 	std::cout << "Done stopping audio..." << std::endl;
 	fflush(stdout);

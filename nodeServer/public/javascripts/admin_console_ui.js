@@ -14,8 +14,51 @@ $(document).ready(function() {
 	$('#btnTerminate').click(function(){
 		sendCommandViaUDP("terminate");
 	});
+
+	$('#btnUpload1').click(function() {
+		var file = document.getElementById('fileUpload').files[0];
+		console.log("File size:", file.size, "bytes");
+
+		if(file) {
+			console.log("File size:", file.size, "bytes");
+			var fileReader = new FileReader();
+			fileReader.onload = function(event) {
+				var fileData = event.target.result;
+				console.log("fileData size:", fileData.byteLength, "bytes");
+				sendFileViaUDP("cl1", fileData);
+			};
+			fileReader.readAsArrayBuffer(file);
+		}
+	})
 	
 });
+
+// Add event listener for file input change
+$('#fileUpload').on('change', function() {
+	var btnUpload = $('#btnUpload1');
+	btnUpload.prop('disabled', !this.files[0]); // Disable the button if no file is selected
+	btnUpload = $('#btnUpload2');
+	btnUpload.prop('disabled', !this.files[0]); // Disable the button if no file is selected
+});
+
+function sendFileViaUDP(lang, fileData) {
+	console.log("fileData size:", fileData.byteLength, "bytes");
+    console.log("Test " + lang);
+    
+    // Emit the ArrayBuffer via socket
+	var base64Data = btoa(String.fromCharCode.apply(null, new Uint8Array(fileData)));
+	socket.emit('fileUpload', 'cl1 ' + base64Data);
+
+	var timeout = setTimeout(function() { 
+		var errMsg = "No response from back-end. Is NodeJS running on the target?";
+		$('#error-message').html(errMsg);
+		$('#error-box').css("display", "block");
+	}, 10000);
+
+    socket.on('fileReply', function(result) {
+		clearTimeout(timeout);
+    })
+};
 
 function sendCommandViaUDP(message) {
 	socket.emit('udpCommand', message);
