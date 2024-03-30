@@ -40,6 +40,8 @@ int main() {
         // std::this_thread::sleep_for(std::chrono::seconds(1));
         std::this_thread::sleep_for(std::chrono::seconds(3));
         audioMixer.queueSound(CUSTOM_1);
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+        audioMixer.queueSound(CUSTOM_2);
     }
 
     shutdownManager.waitForShutdown();

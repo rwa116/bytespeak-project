@@ -17,22 +17,6 @@
 
 #include "network.hpp"
 
-struct WavHeader {
-    char chunkId[4]; // "RIFF"
-    uint32_t chunkSize; // 4 + (8 + SubChunk1Size) + (8 + SubChunk2Size)
-    char format[4]; // "WAVE"
-    char subchunk1Id[4]; // "fmt "
-    uint32_t subchunk1Size; // 16 for PCM
-    uint16_t audioFormat; // 1 for PCM
-    uint16_t numChannels; // 1 for mono, 2 for stereo
-    uint32_t sampleRate; // 44100, 48000, etc.
-    uint32_t byteRate; // SampleRate * NumChannels * BitsPerSample/8
-    uint16_t blockAlign; // NumChannels * BitsPerSample/8
-    uint16_t bitsPerSample; // 8, 16, etc.
-    char subchunk2Id[4]; // "data"
-    uint32_t subchunk2Size; // NumSamples * NumChannels * BitsPerSample/8
-};
-
 Network::Network() {
     isRunning = true;
 
@@ -87,10 +71,10 @@ void *Network::networkThread(void *arg) {
         int bytesRx = recvfrom(socketDescriptor, messageRx, MAX_LEN - 1, 0, 
             (struct sockaddr*) &sinRemote, &sinLen);
 
-        std::cout << "Bytes Rx = " << bytesRx << std::endl;
-        for(int i = 0; i < bytesRx; i++) {
-            std::cout << messageRx[i];
-        }
+        // std::cout << "Bytes Rx = " << bytesRx << std::endl;
+        // for(int i = 0; i < bytesRx; i++) {
+        //     std::cout << messageRx[i];
+        // }
         messageRx[bytesRx] = 0;
         enum Command sentCommand = checkCommand(messageRx);
         lastCommand = sentCommand;
@@ -103,16 +87,24 @@ void *Network::networkThread(void *arg) {
 }
 
 enum Command Network::checkCommand(char* input) {
+    // If all packets have been sent for our custom language wav, return to normal mode
+    if(numPacketsLeft <= 0) {
+        mode = NORMAL;
+    }
+
     if(mode == NORMAL) {
         std::istringstream istream(input);
         std::string token;
         istream >> token;
-        std::cout << "Token = " << token << std::endl;
+        // std::cout << "Token = " << token << std::endl;
         if(token.find("espeak") != std::string::npos) {
             return ESPEAK;
         }
         if(token.find("cl1") != std::string::npos) {
             return CL1;
+        }
+        if(token.find("cl2") != std::string::npos) {
+            return CL2;
         }
         else if(token.find("terminate") != std::string::npos) {
             return TERMINATE;
@@ -121,11 +113,9 @@ enum Command Network::checkCommand(char* input) {
             return UNKNOWN;
         }
     }
+
     else {
         numPacketsLeft--;
-        if(numPacketsLeft <= 0) {
-            mode = NORMAL;
-        }
         return SENDING_DATA;
     }
 }
@@ -171,35 +161,53 @@ void Network::sendReply(enum Command command, char *input, int length, int socke
 
             int digit = std::stoi(token);
 
-            mode = CLINTAKE;
+            mode = CL1_INTAKE;
             numPacketsLeft = digit;
                 
             snprintf(messageTx, MAX_LEN, "CL1 Intake for %d cycles\n", digit);
 
             // Delete existing custom1 file
-            std::string custom1Filename = languageManager->getWavFilename(CUSTOM_1);
-            remove(custom1Filename.c_str());
+            std::string customFilename = languageManager->getWavFilename(CUSTOM_1);
+            remove(customFilename.c_str());
 
             break;
         }
+        case CL2: 
+        {
+            printf("CL2 detected\n");
+            std::istringstream istream(input);
+            std::string token;
+            istream >> token;
+            istream >> token;
 
+            int digit = std::stoi(token);
+
+            mode = CL2_INTAKE;
+            numPacketsLeft = digit;
+                
+            snprintf(messageTx, MAX_LEN, "CL2 Intake for %d cycles\n", digit);
+
+            // Delete existing custom file
+            std::string customFilename = languageManager->getWavFilename(CUSTOM_2);
+            remove(customFilename.c_str());
+
+            break;
+        }
         case SENDING_DATA:
         {
-            std::cout << "string length = " << strlen(input) << std::endl;
-            // Write entire input to CL1 file
-            std::string custom1Filename = languageManager->getWavFilename(CUSTOM_1);
-            std::ofstream custom1File(custom1Filename, std::ios::binary | std::ios::app); // Open file in append mode
+            Language customLanguage = mode == CL1_INTAKE ? CUSTOM_1 : CUSTOM_2;
+            std::string customFilename = languageManager->getWavFilename(customLanguage);
 
-            custom1File.write(input, length);
+            std::ofstream customFile(customFilename, std::ios::binary | std::ios::app); // Open file in append mode
+            customFile.write(input, length);
+            customFile.close();
 
-            custom1File.close();
-
-            audioMixer->readWaveFileIntoMemory(custom1Filename, CUSTOM_1);
+            audioMixer->readWaveFileIntoMemory(customFilename, customLanguage);
 
             snprintf(messageTx, MAX_LEN, "Read custom file into memory\n");
+
             break;
         }
-
         case TERMINATE:
             shutdownManager->signalShutdown();
             snprintf(messageTx, MAX_LEN, "Terminating\n");

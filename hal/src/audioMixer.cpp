@@ -48,6 +48,19 @@ AudioMixer::AudioMixer(LanguageManager *languageManagerReference) {
 	readWaveFileIntoMemory("beatbox-wav-files/french_msg.wav", FRENCH);
 	readWaveFileIntoMemory("beatbox-wav-files/german_msg.wav", GERMAN);
 
+	// Check for custom messages
+	std::string custom1Filename = languageManager->getWavFilename(CUSTOM_1);
+    std::ifstream custom1File(custom1Filename);
+    if(custom1File.good()) {
+		readWaveFileIntoMemory("beatbox-wav-files/custom1_msg.wav", CUSTOM_1);
+    }
+
+	std::string custom2Filename = languageManager->getWavFilename(CUSTOM_2);
+    std::ifstream custom2File(custom2Filename);
+    if(custom2File.good()) {
+		readWaveFileIntoMemory("beatbox-wav-files/custom2_msg.wav", CUSTOM_2);
+    }
+
 	// Launch playback thread:
 	playbackThreadId = std::thread([this]() {
         this->playbackThread(nullptr);

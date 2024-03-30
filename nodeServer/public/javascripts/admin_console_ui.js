@@ -25,11 +25,27 @@ $(document).ready(function() {
 			fileReader.onload = function(event) {
 				var fileData = event.target.result;
 				console.log("fileData size:", fileData.byteLength, "bytes");
-				sendFileViaUDP("cl1", fileData);
+				sendFileViaUDP("cl1 ", fileData);
 			};
 			fileReader.readAsArrayBuffer(file);
 		}
-	})
+	});
+
+	$('#btnUpload2').click(function() {
+		var file = document.getElementById('fileUpload').files[0];
+		console.log("File size:", file.size, "bytes");
+
+		if(file) {
+			console.log("File size:", file.size, "bytes");
+			var fileReader = new FileReader();
+			fileReader.onload = function(event) {
+				var fileData = event.target.result;
+				console.log("fileData size:", fileData.byteLength, "bytes");
+				sendFileViaUDP("cl2 ", fileData);
+			};
+			fileReader.readAsArrayBuffer(file);
+		}
+	});
 	
 });
 
@@ -45,9 +61,9 @@ function sendFileViaUDP(lang, fileData) {
 	console.log("fileData size:", fileData.byteLength, "bytes");
     console.log("Test " + lang);
     
-    // Emit the ArrayBuffer via socket
+    // Need to convert to base64, I can't seem to get the buffer to send correctly without it
 	var base64Data = btoa(String.fromCharCode.apply(null, new Uint8Array(fileData)));
-	socket.emit('fileUpload', 'cl1 ' + base64Data);
+	socket.emit('fileUpload', lang + base64Data);
 
 	var timeout = setTimeout(function() { 
 		var errMsg = "No response from back-end. Is NodeJS running on the target?";
@@ -55,7 +71,7 @@ function sendFileViaUDP(lang, fileData) {
 		$('#error-box').css("display", "block");
 	}, 10000);
 
-    socket.on('fileReply', function(result) {
+    socket.on('commandReply', function(result) {
 		clearTimeout(timeout);
     })
 };

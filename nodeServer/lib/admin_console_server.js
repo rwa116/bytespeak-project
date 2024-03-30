@@ -28,23 +28,25 @@ function handleCommand(socket) {
 		var HOST = '127.0.0.1';
 
 		var client = dgram.createSocket('udp4');
-		console.log('Received data:', fileData);
+		// console.log('Received data:', fileData);
 
-		var base64Data = fileData.substring(4); // Remove the 'cl1 ' prefix
+		var base64Data = fileData.substring(4); // Remove the 'cl_ ' prefix
 		var binaryData = Buffer.from(base64Data, 'base64');
 		var buffer = Buffer.from(binaryData);
 
 		var prefix = fileData.substring(0, 4);
 		let numPackets = Math.ceil(buffer.length / MAX_PACKET_SIZE);
 		var startBuffer = Buffer.from(prefix + " " + numPackets);
+		console.log("prefix = " + prefix);
 
+		// Send the number of packets to expect
 		client.send(startBuffer, 0, startBuffer.length, PORT, HOST, function(err, bytes) {
 			if (err) {
 				throw err;
 			}
 		});
 
-		console.log("handleCommand data byteLength = " + buffer.length + " bytes\n");
+		// console.log("handleCommand data byteLength = " + buffer.length + " bytes\n");
 		let start = 0;
 		while (start < buffer.length) {
 			let end = Math.min(start + MAX_PACKET_SIZE, buffer.length);
@@ -57,7 +59,16 @@ function handleCommand(socket) {
 			start = end;
 		}
 
-		console.log("Sent file");
+		// Handle an incoming message over the UDP from the local application.
+		client.on('message', function (message, remote) {
+
+			var reply = message.toString('utf8')
+			socket.emit('commandReply', reply);
+			client.close();
+
+		});
+
+		// console.log("Sent file");
 
 	});
 	// Pased string of comamnd to relay

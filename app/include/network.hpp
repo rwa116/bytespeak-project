@@ -22,7 +22,8 @@ enum Command {
 };
 
 enum Mode {
-    CLINTAKE,
+    CL1_INTAKE,
+    CL2_INTAKE,
     NORMAL
 };
 
