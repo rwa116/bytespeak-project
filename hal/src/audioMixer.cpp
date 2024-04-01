@@ -208,12 +208,18 @@ AudioMixer::~AudioMixer() {
 	delete[] playbackBuffer;
 	playbackBuffer = NULL;
 
-	// TODO: Free all sound here
+	// Free all sound here
 	delete[] englishSound.pData;
 	delete[] frenchSound.pData;
 	delete[] germanSound.pData;
-	delete[] custom1Sound.pData;
-	delete[] custom2Sound.pData;
+
+	// Custom sounds might not be loaded, so need to check for null before we free
+	if(custom1Sound.pData) {
+		delete[] custom1Sound.pData;
+	}
+	if(custom2Sound.pData) {
+		delete[] custom2Sound.pData;
+	}
 
 	std::cout << "Done stopping audio..." << std::endl;
 	fflush(stdout);

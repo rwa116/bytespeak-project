@@ -16,6 +16,7 @@ enum Command {
     ESPEAK,
     CL1,
     CL2,
+    GET_INFO,
     SENDING_DATA,
     TERMINATE,
     UNKNOWN

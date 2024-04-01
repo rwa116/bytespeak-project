@@ -71,10 +71,6 @@ void *Network::networkThread(void *arg) {
         int bytesRx = recvfrom(socketDescriptor, messageRx, MAX_LEN - 1, 0, 
             (struct sockaddr*) &sinRemote, &sinLen);
 
-        // std::cout << "Bytes Rx = " << bytesRx << std::endl;
-        // for(int i = 0; i < bytesRx; i++) {
-        //     std::cout << messageRx[i];
-        // }
         messageRx[bytesRx] = 0;
         enum Command sentCommand = checkCommand(messageRx);
         lastCommand = sentCommand;
@@ -96,9 +92,11 @@ enum Command Network::checkCommand(char* input) {
         std::istringstream istream(input);
         std::string token;
         istream >> token;
-        // std::cout << "Token = " << token << std::endl;
         if(token.find("espeak") != std::string::npos) {
             return ESPEAK;
+        }
+        if(token.find("getInfo") != std::string::npos) {
+            return GET_INFO;
         }
         if(token.find("cl1") != std::string::npos) {
             return CL1;
@@ -128,11 +126,11 @@ void Network::sendReply(enum Command command, char *input, int length, int socke
     switch(command) {
         case ESPEAK:
         {
-            char message[256];
+            char message[512];
             char* spacePosition = strchr(input, ' ');
             if(spacePosition != nullptr) {
-                strncpy(message, spacePosition + 1, 255);
-                message[255] = '\0';
+                strncpy(message, spacePosition + 1, 511);
+                message[511] = '\0';
 
                 std::string englishFilename = languageManager->getWavFilename(ENGLISH);
                 textToSpeech->translateToWave(message, ENGLISH, englishFilename);
@@ -148,12 +146,14 @@ void Network::sendReply(enum Command command, char *input, int length, int socke
                 textToSpeech->translateToWave(germanMessage, GERMAN, germanFileName);
                 audioMixer->readWaveFileIntoMemory(germanFileName, GERMAN);
             }
-            snprintf(messageTx, MAX_LEN, "Set message to %s\n", message);
+            snprintf(messageTx, MAX_LEN, "currentMessage;%s", message);
             break;
         }
+        case GET_INFO:
+            snprintf(messageTx, MAX_LEN, "currentMessage;%s", translator->getCurrentMessage().c_str());
+            break;
         case CL1: 
         {
-            printf("CL1 detected\n");
             std::istringstream istream(input);
             std::string token;
             istream >> token;
@@ -174,7 +174,6 @@ void Network::sendReply(enum Command command, char *input, int length, int socke
         }
         case CL2: 
         {
-            printf("CL2 detected\n");
             std::istringstream istream(input);
             std::string token;
             istream >> token;

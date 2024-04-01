@@ -7,9 +7,19 @@
 #include <sstream>
 #include <thread>
 #include <chrono>
+#include <fstream>
 
 #define TRANSLATOR "./trans "
 Translator::Translator() {
+    std::ifstream file("currentMessage.txt");
+    if(file.good()) {
+        std::getline(file, currentMessage);
+    }
+    else {
+        std::ofstream newFile("currentMessage.txt");
+        newFile << "This is a default message";
+    }
+    file.close();
 }
 
 Translator::~Translator() {
@@ -28,8 +38,19 @@ std::string Translator::translateToLanguage(std::string message , enum Language 
             languageCode = "en";
             break;
     }
-    std::string command = std::string(TRANSLATOR) + "-b en:" + languageCode + " " + message;
+    std::string command = std::string(TRANSLATOR) + "-b en:" + languageCode + " \"" + message + "\"";
+    updateCurrentMessageTextFile(message);
     return runCommand(command);
+}
+
+void Translator::updateCurrentMessageTextFile(std::string message) {
+    currentMessage =  message;
+    std::ofstream file("currentMessage.txt");
+    file << message;
+    file.close();
+}
+std::string Translator::getCurrentMessage() { 
+    return currentMessage; 
 }
 
 std::string Translator::runCommand(std::string command) {

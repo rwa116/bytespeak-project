@@ -59,7 +59,7 @@ void TextToSpeech::translateToWave(std::string message, enum Language language, 
             return;
     } 
     std::stringstream command;
-    command << "espeak '" << message << "' -v" << languageCode << " -w " << filename;
+    command << "espeak \"" << message << "\" -v" << languageCode << " -w " << filename;
 
     runCommand(command.str());
     // Allow 2 second for espeak processing, this should be more than enough
