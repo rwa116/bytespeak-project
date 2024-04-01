@@ -44,7 +44,7 @@ Network::~Network() {
     networkThreadId.join();
 }
 
-#define MAX_LEN 200000
+#define MAX_LEN 65200
 #define PORT 12345
 void *Network::networkThread(void *arg) {
     (void)arg;
