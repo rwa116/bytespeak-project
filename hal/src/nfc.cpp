@@ -1,7 +1,17 @@
 #include "hal/nfc.hpp"
 
-NFCReader::NFCReader(const char* device, int address) 
-    : device(device), fileDescriptor(-1), address(address) {
+/**
+ * @brief Constructs an NFCReader object.
+ *
+ * This constructor initializes the NFCReader object with the specified device and address.
+ * It also initializes the file descriptor and sends a setup command to the NFC reader.
+ *
+ * @param device The device name or path.
+ * @param address The address of the NFC reader.
+ */
+NFCReader::NFCReader(const char *device, int address)
+    : device(device), fileDescriptor(-1), address(address)
+{
     fileDescriptor = initI2C();
 
     unsigned char response[256];
@@ -14,33 +24,50 @@ NFCReader::NFCReader(const char* device, int address)
         0xD4, // Data Exchange command
 
         0x14, // SAMConfiguration command
-        0x01, // 
-        
+        0x01, //
+
         0x17, // Checksum for the command bytes (0x100 - 0xD4 - 0x14 - 0x01 = 0x17)
         0x00, // Reserved byte
     };
 
-    if (sendCommandAndWaitForResponse(setupCommand, sizeof(setupCommand), response, sizeof(response))) {
-        for(int i = 0; i < 23; i++) {
+    if (sendCommandAndWaitForResponse(setupCommand, sizeof(setupCommand), response, sizeof(response), false))
+    {
+        for (int i = 0; i < 23; i++)
+        {
             std::cout << "0x" << std::hex << (int)response[i] << " ";
         }
         std::cout << std::endl;
     }
 }
 
-NFCReader::~NFCReader() {
-    if (fileDescriptor >= 0) {
+
+NFCReader::~NFCReader()
+{
+    if (fileDescriptor >= 0)
+    {
         close(fileDescriptor);
     }
 }
 
-int NFCReader::initI2C() {
+
+
+/**
+ * @brief Initializes the I2C bus for the NFC reader.
+ * 
+ * This function opens the I2C bus and sets the slave address for communication with the NFC reader.
+ * 
+ * @return The file descriptor of the opened I2C bus, or -1 if an error occurred.
+ */
+int NFCReader::initI2C()
+{
     int file;
-    if ((file = open(device, O_RDWR)) < 0) {
+    if ((file = open(device, O_RDWR)) < 0)
+    {
         std::cerr << "Failed to open the I2C bus" << std::endl;
         return -1;
     }
-    if (ioctl(file, I2C_SLAVE, address) < 0) {
+    if (ioctl(file, I2C_SLAVE, address) < 0)
+    {
         std::cerr << "Failed to acquire bus access and/or talk to slave." << std::endl;
         close(file);
         return -1;
@@ -48,29 +75,87 @@ int NFCReader::initI2C() {
     return file;
 }
 
-bool NFCReader::sendCommandAndWaitForResponse(unsigned char* command, int commandLength, unsigned char* response, int responseLength) {
-    if (write(fileDescriptor, command, commandLength) != commandLength) {
+
+
+
+/**
+ * Sends a command to the NFC reader and waits for a response.
+ *
+ * @param command The command to send.
+ * @param commandLength The length of the command.
+ * @param response The buffer to store the response.
+ * @param responseLength The length of the response buffer.
+ * @param need_response Flag indicating whether a response is needed.
+ * @return True if the command was sent successfully and a response was received, false otherwise.
+ */
+bool NFCReader::sendCommandAndWaitForResponse(unsigned char *command, int commandLength, unsigned char *response, int responseLength, bool need_response)
+{
+    if (write(fileDescriptor, command, commandLength) != commandLength)
+    {
         std::cerr << "Failed to write to the I2C bus." << std::endl;
         return false;
     }
 
-    usleep(250000); 
+    usleep(250000); // 25 milliseconds
 
-    if (read(fileDescriptor, response, responseLength) > 0) {
-        clearBuffer();
-        return true;
-    } else {
-        std::cerr << "Failed to read from the device." << std::endl;
+    // Now check for ACK
+    unsigned char ackBuffer[7];
+    if (read(fileDescriptor, ackBuffer, sizeof(ackBuffer)) != sizeof(ackBuffer) ||
+        ackBuffer[1] != 0x00 || ackBuffer[2] != 0x00 || ackBuffer[3] != 0xFF ||
+        ackBuffer[4] != 0x00 || ackBuffer[5] != 0xFF || ackBuffer[6] != 0x00)
+    {
+        std::cerr << "ACK frame not received." << std::endl;
+        // print the received data
+        for (unsigned int i = 0; i < sizeof(ackBuffer); i++)
+        {
+            std::cout << "0x" << std::hex << (int)ackBuffer[i] << " ";
+        }
         return false;
     }
-}
+    sleep(1);
 
-bool NFCReader::clearBuffer() {
+    if (!need_response)
+    {
+        return true;
+    }
 
+    int bytesRead;
+    int i = 0;
+    do
+    {   
+        std::cout << "iter: " << i << std::endl;
+        usleep(10000); // Wait for 10 milliseconds before retrying
+        bytesRead = read(fileDescriptor, response, responseLength);
+        i++;
+
+        // print the response
+        for (unsigned int i = 0; i < sizeof(response); i++)
+        {
+            std::cout << "0x" << std::hex << (int)response[i] << " ";
+        }
+        
+        if (bytesRead < 0)
+        {
+            std::cerr << "Failed to read from the device." << std::endl;
+            return false;
+        }
+
+    } while (bytesRead == 0 || (int)response[0] == 0);
+
+
+ 
     return true;
 }
 
-std::string NFCReader::waitForCardAndReadUID() {
+
+
+/**
+ * @brief The main function of the wait for card, will poll the NFC reader and return results.
+ * 
+ * @return The UID of the card that was detected.
+ */
+std::string NFCReader::waitForCardAndReadUID()
+{
     unsigned char detectCardCommand[] = {
         0x00, // Reserved byte
         0x00, // Reserved byte
@@ -88,16 +173,21 @@ std::string NFCReader::waitForCardAndReadUID() {
     unsigned char response[256];
     std::string uid;
 
-    while (true) {
-        if (sendCommandAndWaitForResponse(detectCardCommand, sizeof(detectCardCommand), response, sizeof(response))) {
+    while (true)
+    {
+        if (sendCommandAndWaitForResponse(detectCardCommand, sizeof(detectCardCommand), response, sizeof(response), true))
+        {
             // Check for a valid response length before processing
-            if (response[3] > 0) { // assuming response[3] contains the length of the coming data
-                int uidStartIndex = 8; // The index where UID starts in the response might need adjustment
-                int uidLength = 4; // Adjust based on actual UID length
+            if (response[3] > 0)
+            {                           // assuming response[3] contains the length of the coming data
+                int uidStartIndex = 11; // The index where UID starts in the response might need adjustment
+                int uidLength = 4;      // Adjust based on actual UID length
                 std::stringstream ss;
-                for (int i = uidStartIndex; i < uidStartIndex + uidLength; i++) {
+                for (int i = uidStartIndex; i < uidStartIndex + uidLength; i++)
+                {
                     ss << std::hex << std::setfill('0') << std::setw(2) << (int)response[i];
-                    if (i < uidStartIndex + uidLength - 1) {
+                    if (i < uidStartIndex + uidLength - 1)
+                    {
                         ss << ":";
                     }
                 }
@@ -105,10 +195,8 @@ std::string NFCReader::waitForCardAndReadUID() {
                 break;
             }
         }
-        sleep(1); 
+        sleep(1);
     }
 
     return uid;
 }
-
-
