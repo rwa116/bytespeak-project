@@ -20,7 +20,9 @@ private:
     int fileDescriptor;
     int address;
     int initI2C();
-    bool sendCommandAndWaitForResponse(unsigned char* command, int commandLength, unsigned char* response, int responseLength);
+    bool sendCommandAndWaitForResponse(unsigned char* command, int commandLength, unsigned char* response, int responseLength, bool need_response);
+    bool clearBuffer();
+
 };
 
 #endif // NFCREADER_H

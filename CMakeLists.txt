@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 3.18)
 project(my_byte_speaker VERSION 1.0 DESCRIPTION "Byte Speaker" LANGUAGES CXX)
 
+
 # Compiler options (inherited by sub-folders)
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-Wall -Werror -Wpedantic -Wextra)
