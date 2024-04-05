@@ -12,6 +12,11 @@
 NFCReader::NFCReader(const char *device, int address)
     : device(device), fileDescriptor(-1), address(address)
 {
+    // config pin
+    system("config-pin P9_19 i2c");
+    system("config-pin P9_20 i2c");
+
+    
     fileDescriptor = initI2C();
 
     unsigned char response[256];
@@ -32,11 +37,9 @@ NFCReader::NFCReader(const char *device, int address)
 
     if (sendCommandAndWaitForResponse(setupCommand, sizeof(setupCommand), response, sizeof(response), false))
     {
-        for (int i = 0; i < 23; i++)
-        {
-            std::cout << "0x" << std::hex << (int)response[i] << " ";
-        }
-        std::cout << std::endl;
+        std::cout << "NFC Reader setup complete" << std::endl;
+    } else {
+        std::cerr << "Failed to setup the NFC reader" << std::endl;
     }
 }
 
@@ -112,7 +115,8 @@ bool NFCReader::sendCommandAndWaitForResponse(unsigned char *command, int comman
         }
         return false;
     }
-    sleep(1);
+
+    sleep(1);   // give her some time
 
     if (!need_response)
     {
@@ -123,16 +127,9 @@ bool NFCReader::sendCommandAndWaitForResponse(unsigned char *command, int comman
     int i = 0;
     do
     {   
-        std::cout << "iter: " << i << std::endl;
         usleep(10000); // Wait for 10 milliseconds before retrying
         bytesRead = read(fileDescriptor, response, responseLength);
         i++;
-
-        // print the response
-        for (unsigned int i = 0; i < sizeof(response); i++)
-        {
-            std::cout << "0x" << std::hex << (int)response[i] << " ";
-        }
         
         if (bytesRead < 0)
         {
