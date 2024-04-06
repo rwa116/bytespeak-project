@@ -22,19 +22,23 @@ int main() {
     AudioMixer audioMixer(&languageManager);
     ShutdownManager shutdownManager;
     Network network(&shutdownManager, &languageManager, &textToSpeech, &translator, &audioMixer);
-    NFCReader reader("/dev/i2c-2", 0x24);
+    //NFCReader reader("/dev/i2c-2", 0x24);
 
     // Main loop
     while(!shutdownManager.isShutdown()) {
-        std::this_thread::sleep_for(std::chrono::seconds(3));
         audioMixer.queueSound(ENGLISH);
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-        audioMixer.queueSound(FRENCH);
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-        audioMixer.queueSound(GERMAN);
-        std::string uid = reader.waitForCardAndReadUID();
-        std::cout << "UID = " << uid << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::seconds(20));
+        // std::this_thread::sleep_for(std::chrono::seconds(3));
+        // audioMixer.queueSound(FRENCH);
+        // std::this_thread::sleep_for(std::chrono::seconds(3));
+        // audioMixer.queueSound(GERMAN);
+        // std::string uid = reader.waitForCardAndReadUID();
+        // std::cout << "UID = " << uid << std::endl;
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
+        // std::this_thread::sleep_for(std::chrono::seconds(5));
+        // audioMixer.queueSound(CUSTOM_1);
+        // std::this_thread::sleep_for(std::chrono::seconds(5));
+        // audioMixer.queueSound(CUSTOM_2);
     }
 
     shutdownManager.waitForShutdown();

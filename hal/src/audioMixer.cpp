@@ -48,6 +48,19 @@ AudioMixer::AudioMixer(LanguageManager *languageManagerReference) {
 	readWaveFileIntoMemory("beatbox-wav-files/french_msg.wav", FRENCH);
 	readWaveFileIntoMemory("beatbox-wav-files/german_msg.wav", GERMAN);
 
+	// Check for custom messages
+	std::string custom1Filename = languageManager->getWavFilename(CUSTOM_1);
+    std::ifstream custom1File(custom1Filename);
+    if(custom1File.good()) {
+		readWaveFileIntoMemory("beatbox-wav-files/custom1_msg.wav", CUSTOM_1);
+    }
+
+	std::string custom2Filename = languageManager->getWavFilename(CUSTOM_2);
+    std::ifstream custom2File(custom2Filename);
+    if(custom2File.good()) {
+		readWaveFileIntoMemory("beatbox-wav-files/custom2_msg.wav", CUSTOM_2);
+    }
+
 	// Launch playback thread:
 	playbackThreadId = std::thread([this]() {
         this->playbackThread(nullptr);
@@ -65,6 +78,12 @@ void AudioMixer::readWaveFileIntoMemory(std::string fileName, enum Language lang
 			break;
 		case GERMAN:
 			fetchedSound = &germanSound;
+			break;
+		case CUSTOM_1:
+			fetchedSound = &custom1Sound;
+			break;
+		case CUSTOM_2:
+			fetchedSound = &custom2Sound;
 			break;
 		default:
 			fetchedSound = &englishSound;
@@ -144,14 +163,24 @@ void AudioMixer::queueSound(enum Language language)
 		case GERMAN:
 			fetchedSound = &germanSound;
 			break;
+		case CUSTOM_1:
+			fetchedSound = &custom1Sound;
+			break;
+		case CUSTOM_2:
+			fetchedSound = &custom2Sound;
+			break;
 		default:
 			fetchedSound = &englishSound;
 			break;
 	}
 
 	// Ensure we are only being asked to play "good" sounds:
-	assert(fetchedSound->numSamples > 0);
-	assert(fetchedSound->pData);
+	if(fetchedSound->numSamples <= 0 || !fetchedSound->pData) {
+		std::cout << "ERROR: Sound file is empty or not loaded." << std::endl;
+		pthread_mutex_unlock(&audioMutex);
+		return;
+	}
+
         /*
         * Place the new sound file into that slot.
 	    * Note: You are only copying a pointer, not the entire data of the wave file!
@@ -179,10 +208,18 @@ AudioMixer::~AudioMixer() {
 	delete[] playbackBuffer;
 	playbackBuffer = NULL;
 
-	// TODO: Free all sound here
+	// Free all sound here
 	delete[] englishSound.pData;
 	delete[] frenchSound.pData;
 	delete[] germanSound.pData;
+
+	// Custom sounds might not be loaded, so need to check for null before we free
+	if(custom1Sound.pData) {
+		delete[] custom1Sound.pData;
+	}
+	if(custom2Sound.pData) {
+		delete[] custom2Sound.pData;
+	}
 
 	std::cout << "Done stopping audio..." << std::endl;
 	fflush(stdout);

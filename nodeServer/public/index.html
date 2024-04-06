@@ -15,11 +15,17 @@
 					<h3>Status</h3>
 					<p>Device 1 status: <b id="device-status">Online?</b></p> 
 					<h3>Current Message</h3>
-					<p>{Insert message here}</p>
+					<p id="current-message">Default</p>
+					<form id="msgForm">
+						<p><b>Update Current Message:</b></p>
+						<input type="text" id="new-message" placeholder="Please type the new English message here." required>
+						<button type="submit">Submit</button>  
+					</form>
 					<h3> Upload dictation </h3>
 					<p>Note: only .wav files accepted.</p>
-					<input type="file" name="file" accept=".wav"></br>
-					<input type="submit" id="btnUpload" value="Upload!" style="margin-top: 10px;" disabled/>
+					<input type="file" id="fileUpload" name="file" accept=".wav"></br>
+					<input type="submit" id="btnUpload1" value="Upload Custom Language 1" style="margin-top: 10px;"/>
+					<input type="submit" id="btnUpload2" value="Upload Custom Language 2" style="margin-top: 10px;"/>
 					<h3>Shutdown</h3>
 					<input type="button" id="btnTerminate" value="Terminate Program" style="margin-bottom: 10px;"/>
 				</div>

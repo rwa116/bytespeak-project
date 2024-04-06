@@ -66,6 +66,8 @@ private:
 	wavedata_t englishSound;
 	wavedata_t frenchSound;
 	wavedata_t germanSound;
+	wavedata_t custom1Sound;
+	wavedata_t custom2Sound;
 	playbackSound_t soundBite;
 
 	LanguageManager *languageManager;
