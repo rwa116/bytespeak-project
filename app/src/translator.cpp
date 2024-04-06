@@ -10,13 +10,14 @@
 #include <fstream>
 
 #define TRANSLATOR "./trans "
+#define CURRENT_MESSAGE_FILE "bytespeak-wav-files/currentMessage.txt"
 Translator::Translator() {
-    std::ifstream file("currentMessage.txt");
+    std::ifstream file(CURRENT_MESSAGE_FILE);
     if(file.good()) {
         std::getline(file, currentMessage);
     }
     else {
-        std::ofstream newFile("currentMessage.txt");
+        std::ofstream newFile(CURRENT_MESSAGE_FILE);
         newFile << "This is a default message";
     }
     file.close();
@@ -34,18 +35,23 @@ std::string Translator::translateToLanguage(std::string message , enum Language 
         case GERMAN:
             languageCode = "de";
             break;
+        case SPANISH:
+            languageCode = "es";
+            break;
+        case CHINESE:
+            languageCode = "zh-CN";
+            break;
         default:
             languageCode = "en";
             break;
     }
     std::string command = std::string(TRANSLATOR) + "-b en:" + languageCode + " \"" + message + "\"";
-    updateCurrentMessageTextFile(message);
     return runCommand(command);
 }
 
 void Translator::updateCurrentMessageTextFile(std::string message) {
     currentMessage =  message;
-    std::ofstream file("currentMessage.txt");
+    std::ofstream file(CURRENT_MESSAGE_FILE);
     file << message;
     file.close();
 }

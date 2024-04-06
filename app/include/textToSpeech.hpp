@@ -11,11 +11,16 @@
 #include <hal/languageManager.hpp>
 #include <translator.hpp>
 
+enum Gender {
+    MALE,
+    FEMALE,
+};
+
 class TextToSpeech {
 public:
     TextToSpeech(LanguageManager *languageManagerReference, Translator *translatorReference);
     ~TextToSpeech();
-    void translateToWave(std::string message, enum Language language, std::string filename);
+    void translateToWave(std::string message, enum Language language, std::string filename, enum Gender gender = MALE);
 private:
     LanguageManager *languageManager;
     Translator *translator;

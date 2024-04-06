@@ -131,20 +131,21 @@ void Network::sendReply(enum Command command, char *input, int length, int socke
             if(spacePosition != nullptr) {
                 strncpy(message, spacePosition + 1, 511);
                 message[511] = '\0';
+                translator->updateCurrentMessageTextFile(message);
 
-                std::string englishFilename = languageManager->getWavFilename(ENGLISH);
-                textToSpeech->translateToWave(message, ENGLISH, englishFilename);
-                audioMixer->readWaveFileIntoMemory(englishFilename, ENGLISH);
+                for(enum Language currentLanguage : languageManager->getDefaultLanguages()) {
+                    std::string filename = languageManager->getWavFilename(currentLanguage);
 
-                std::string frenchFilename = languageManager->getWavFilename(FRENCH);
-                std::string frenchMessage = translator->translateToLanguage(message, FRENCH);
-                textToSpeech->translateToWave(frenchMessage, FRENCH, frenchFilename);
-                audioMixer->readWaveFileIntoMemory(frenchFilename, FRENCH);
+                    // defaultMessage if ENGLISH, otherwise translate
+                    std::string newMessage = currentLanguage == ENGLISH ? message
+                        : translator->translateToLanguage(message, currentLanguage);
 
-                std::string germanFileName = languageManager->getWavFilename(GERMAN);
-                std::string germanMessage = translator->translateToLanguage(message, GERMAN);
-                textToSpeech->translateToWave(germanMessage, GERMAN, germanFileName);
-                audioMixer->readWaveFileIntoMemory(germanFileName, GERMAN);
+                    pthread_mutex_lock(&audioMixer->fileAccessMutex);
+                    textToSpeech->translateToWave(newMessage, currentLanguage, filename);
+                    pthread_mutex_unlock(&audioMixer->fileAccessMutex);
+
+                    audioMixer->readWaveFileIntoMemory(filename, currentLanguage);
+                }
             }
             snprintf(messageTx, MAX_LEN, "currentMessage;%s", message);
             break;
