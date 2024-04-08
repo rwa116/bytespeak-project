@@ -71,7 +71,6 @@ AudioMixer::AudioMixer(LanguageManager *languageManagerReference)
         this->playbackThread(nullptr);
     });
 
-// TODO: Get program to work with sudo?
 	// In order to have the audio playback be smooth WHILE piper is translating messages, we must
 	// set the priority of the playback thread to be higher
 	pthread_t nativeHandle = playbackThreadId.native_handle();
@@ -80,7 +79,7 @@ AudioMixer::AudioMixer(LanguageManager *languageManagerReference)
 
     err = pthread_setschedparam(nativeHandle, SCHED_FIFO, &params);
     if (err != 0) {
-        std::cerr << "Failed to set priority for playback thread: " << strerror(err);
+        std::cerr << "Failed to set priority for playback thread: " << strerror(err) << std::endl;
 		std::cout << "Please check that you have run the program with sudo." << std::endl;
     }
 }
