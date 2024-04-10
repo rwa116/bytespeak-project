@@ -18,6 +18,7 @@ enum Command {
     CL2,
     GET_INFO,
     SENDING_DATA,
+    SET_VOICE,
     TERMINATE,
     UNKNOWN
 };

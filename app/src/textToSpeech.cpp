@@ -16,6 +16,13 @@ TextToSpeech::TextToSpeech(LanguageManager *languageManagerReference, Translator
     // Initial message setup
     std::string defaultMessage = "This is a default message";
 
+    // Insert default options into map
+    languageGenderMap.insert({FRENCH, MALE});
+    languageGenderMap.insert({GERMAN, FEMALE});
+    languageGenderMap.insert({ENGLISH, FEMALE});
+    languageGenderMap.insert({SPANISH, MALE});
+    languageGenderMap.insert({CHINESE, FEMALE});
+
     for(enum Language language : languageManager->getDefaultLanguages()) {
         std::string filename = languageManager->getWavFilename(language);
         std::ifstream file(filename);
@@ -32,6 +39,10 @@ TextToSpeech::TextToSpeech(LanguageManager *languageManagerReference, Translator
 TextToSpeech::~TextToSpeech() {
 }
 
+enum Gender TextToSpeech::getCurrentGender(enum Language language) {
+    return languageGenderMap[language];
+}
+
 void TextToSpeech::translateToWave(std::string message, enum Language language, std::string filename, enum Gender gender) {
     std::string languageCode;
     std::string genderCode;
@@ -39,32 +50,52 @@ void TextToSpeech::translateToWave(std::string message, enum Language language, 
         case FRENCH:
             languageCode = "fr_FR";
             switch(gender) {
+                case FEMALE:
+                    genderCode = "siwis-low";
+                    languageGenderMap[language] = FEMALE;
+                    break;
                 default:
                     genderCode = "gilles-low";
+                    languageGenderMap[language] = MALE;
                     break;
             }
             break;
         case GERMAN:
             languageCode = "de_DE";
             switch(gender) {
+                case MALE:
+                    genderCode = "karlsson-low";
+                    languageGenderMap[language] = MALE;
+                    break;
                 default:
                     genderCode = "eva_k-x_low";
+                    languageGenderMap[language] = FEMALE;
                     break;
             }
             break;
         case ENGLISH:
             languageCode = "en_US";
             switch(gender) {
+                case MALE:
+                    genderCode = "danny-low";
+                    languageGenderMap[language] = MALE;
+                    break;
                 default:
                     genderCode = "amy-low";
+                    languageGenderMap[language] = FEMALE;
                     break;
             }
             break;
         case SPANISH:
             languageCode = "es_ES";
             switch(gender) {
+                case FEMALE:
+                    genderCode = "mls_9972-low";
+                    languageGenderMap[language] = FEMALE;
+                    break;
                 default:
                     genderCode = "carlfm-x_low";
+                    languageGenderMap[language] = MALE;
                     break;
             }
             break;
@@ -73,6 +104,7 @@ void TextToSpeech::translateToWave(std::string message, enum Language language, 
             switch(gender) {
                 default:
                     genderCode = "huayan-x_low";
+                    languageGenderMap[language] = FEMALE;
                     break;
             }
             break;

@@ -4,6 +4,8 @@
 // Make connection to server when web page is fully loaded.
 var socket = io.connect();
 $(document).ready(function() {
+	// Populate the voice dropdown based on the selected language
+	populateVoiceDropdown();
 
 	window.setInterval(function() {sendRequest('uptime')}, 1000); //for proc/uptime
 	
@@ -41,6 +43,16 @@ $(document).ready(function() {
 		}
 	});
 
+	$('#updateVoice').click(function() {
+		var languageDropdown = document.getElementById("language-dropdown");
+		var voiceDropdown = document.getElementById("voice-dropdown");
+		var selectedLang = languageDropdown.value;
+		var selectedVoice = voiceDropdown.value;
+
+		document.getElementById("updating-voice").classList.remove('hidden');
+		sendCommandViaUDP("setVoice " + selectedLang + " " + selectedVoice);
+	});
+
 	document.getElementById("msgForm").addEventListener("submit", function(event) {
         event.preventDefault();
 
@@ -50,6 +62,65 @@ $(document).ready(function() {
     });
 	
 });
+
+function populateVoiceDropdown() {
+	var languageDropdown = document.getElementById("language-dropdown");
+	var voiceDropdown = document.getElementById("voice-dropdown");
+	var selectedLang = languageDropdown.value;
+
+	// Clear the voice dropdown
+	voiceDropdown.innerHTML = "";
+
+	// Populate the voice dropdown
+	switch(selectedLang) {
+		case "en-US":
+			var mOption = document.createElement("option");
+			mOption.text = "Danny";
+			mOption.value = "m";
+			voiceDropdown.add(mOption);
+			var fOption = document.createElement("option");
+			fOption.text = "Amy";
+			fOption.value = "f";
+			voiceDropdown.add(fOption);
+			break;
+		case "es-ES":
+			var mOption = document.createElement("option");
+			mOption.text = "Carlos";
+			mOption.value = "m";
+			voiceDropdown.add(mOption);
+			var fOption = document.createElement("option");
+			fOption.text = "Maya";
+			fOption.value = "f";
+			voiceDropdown.add(fOption);
+			break;
+		case "fr-FR":
+			var mOption = document.createElement("option");
+			mOption.text = "Gilles";
+			mOption.value = "m";
+			voiceDropdown.add(mOption);
+			var fOption = document.createElement("option");
+			fOption.text = "Siwis";
+			fOption.value = "f";
+			voiceDropdown.add(fOption);
+			break;
+		case "de-DE":
+			var fOption = document.createElement("option");
+			fOption.text = "Eva";
+			fOption.value = "f";
+			voiceDropdown.add(fOption);
+			var mOption = document.createElement("option");
+			mOption.text = "Karlsson";
+			mOption.value = "m";
+			voiceDropdown.add(mOption);
+			break;
+		case "zh-CN":
+			var fOption = document.createElement("option");
+			fOption.text = "Huayan";
+			fOption.value = "f";
+			voiceDropdown.add(fOption);
+			break;
+	}
+}
 
 // Add event listener for file input change
 $('#fileUpload').on('change', function() {
@@ -100,6 +171,9 @@ function sendCommandViaUDP(message) {
 		switch(splitRes[0]) {
 			case "currentMessage":
 				$('#current-message').html(splitRes[1]);
+				break;
+			case "setVoice":
+				document.getElementById("updating-voice").classList.add('hidden');
 				break;
 			default:
 				console.log("Unknown command: " + splitRes[0]);
