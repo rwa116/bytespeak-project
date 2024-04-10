@@ -91,6 +91,7 @@ function handleCommand(socket) {
 		// Handle an incoming message over the UDP from the local application.
 		client.on('message', function (message, remote) {
 			var reply = message.toString('utf8')
+			console.log("reply: ", reply)
 			socket.emit('commandReply', reply);
 			clearTimeout(timeout);
 			client.close();
