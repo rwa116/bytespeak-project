@@ -9,7 +9,10 @@
 #include "textToSpeech.hpp"
 #include "network.hpp"
 #include "translator.hpp"
+#include "stateReader.hpp"
 #include "hal/languageManager.hpp"
+#include "hal/potController.hpp"
+#include "hal/display.hpp"
 
 #include "hal/audioMixer.hpp"
 #include "hal/nfc.hpp"
@@ -21,6 +24,7 @@ int main() {
     TextToSpeech textToSpeech(&languageManager, &translator);
     AudioMixer audioMixer(&languageManager);
     ShutdownManager shutdownManager;
+    StateReader stateReader(&audioMixer);
     Network network(&shutdownManager, &languageManager, &textToSpeech, &translator, &audioMixer);
     //NFCReader reader("/dev/i2c-2", 0x24);
 
