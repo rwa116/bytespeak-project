@@ -25,9 +25,13 @@ add_custom_command(TARGET byte_speaker POST_BUILD
 # Copy the WAV folder to NFS
 add_custom_command(TARGET byte_speaker POST_BUILD 
 COMMAND "${CMAKE_COMMAND}" -E copy_directory
-   "${CMAKE_SOURCE_DIR}/beatbox-wav-files"
-   "~/cmpt433/public/myApps/beatbox-wav-files" 
+   "${CMAKE_SOURCE_DIR}/bytespeak-wav-files"
+   "~/cmpt433/public/myApps/bytespeak-wav-files" 
 COMMENT "Copying WAVE files to public NFS directory")
+
+add_custom_command(TARGET byte_speaker POST_BUILD 
+COMMAND chmod -R 777 "~/cmpt433/public/myApps/bytespeak-wav-files"
+COMMENT "Giving perms to WAVE files in public NFS directory")
 
 # Copy the WAV folder to NFS
 add_custom_command(TARGET byte_speaker POST_BUILD 
@@ -42,3 +46,17 @@ COMMAND "${CMAKE_COMMAND}" -E copy
    "${CMAKE_SOURCE_DIR}/trans"
    "~/cmpt433/public/myApps/trans" 
 COMMENT "Copying translator application to public NFS directory")
+
+# Copy the voices to NFC
+add_custom_command(TARGET byte_speaker POST_BUILD 
+COMMAND "${CMAKE_COMMAND}" -E copy_directory
+   "${CMAKE_SOURCE_DIR}/bytespeak-voices"
+   "~/cmpt433/public/myApps/bytespeak-voices" 
+COMMENT "Copying bytespeak-voices to public NFS directory")
+
+# Copy the piper application to NFC
+add_custom_command(TARGET byte_speaker POST_BUILD 
+COMMAND "${CMAKE_COMMAND}" -E copy_directory
+   "${CMAKE_SOURCE_DIR}/piper"
+   "~/cmpt433/public/myApps/piper" 
+COMMENT "Copying piper application to public NFS directory")

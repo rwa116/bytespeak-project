@@ -27,17 +27,21 @@ int main() {
     // Main loop
     while(!shutdownManager.isShutdown()) {
         audioMixer.queueSound(ENGLISH);
-        std::this_thread::sleep_for(std::chrono::seconds(20));
-        // std::this_thread::sleep_for(std::chrono::seconds(3));
-        // audioMixer.queueSound(FRENCH);
-        // std::this_thread::sleep_for(std::chrono::seconds(3));
-        // audioMixer.queueSound(GERMAN);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        audioMixer.queueSound(FRENCH);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        audioMixer.queueSound(GERMAN);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        audioMixer.queueSound(SPANISH);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        audioMixer.queueSound(CHINESE);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         // std::string uid = reader.waitForCardAndReadUID();
         // std::cout << "UID = " << uid << std::endl;
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
+        // // std::this_thread::sleep_for(std::chrono::seconds(1));
         // std::this_thread::sleep_for(std::chrono::seconds(5));
-        // audioMixer.queueSound(CUSTOM_1);
-        // std::this_thread::sleep_for(std::chrono::seconds(5));
+        audioMixer.queueSound(CUSTOM_1);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         // audioMixer.queueSound(CUSTOM_2);
     }
 

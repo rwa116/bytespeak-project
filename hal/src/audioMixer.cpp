@@ -3,11 +3,14 @@
 // Note: Generates low latency audio on BeagleBone Black; higher latency found on host.
 #include <fstream>
 #include <iostream>
+#include <pthread.h>
 
 #include "hal/audioMixer.hpp"
 
 
-AudioMixer::AudioMixer(LanguageManager *languageManagerReference) {
+AudioMixer::AudioMixer(LanguageManager *languageManagerReference) 
+	: custom1Sound{0, nullptr}, custom2Sound{0, nullptr}
+{
 	languageManager = languageManagerReference;
 	setVolume(DEFAULT_VOLUME);
 
@@ -44,27 +47,41 @@ AudioMixer::AudioMixer(LanguageManager *languageManagerReference) {
 	playbackBuffer = new short[playbackBufferSize];
 
 	// SET DEFAULT MESSAGES (Pre-recorded)
-	readWaveFileIntoMemory("beatbox-wav-files/english_msg.wav", ENGLISH);
-	readWaveFileIntoMemory("beatbox-wav-files/french_msg.wav", FRENCH);
-	readWaveFileIntoMemory("beatbox-wav-files/german_msg.wav", GERMAN);
+	readWaveFileIntoMemory(languageManager->getWavFilename(ENGLISH), ENGLISH);
+	readWaveFileIntoMemory(languageManager->getWavFilename(FRENCH), FRENCH);
+	readWaveFileIntoMemory(languageManager->getWavFilename(GERMAN), GERMAN);
+	readWaveFileIntoMemory(languageManager->getWavFilename(SPANISH), SPANISH);
+	readWaveFileIntoMemory(languageManager->getWavFilename(CHINESE), CHINESE);
 
 	// Check for custom messages
 	std::string custom1Filename = languageManager->getWavFilename(CUSTOM_1);
     std::ifstream custom1File(custom1Filename);
     if(custom1File.good()) {
-		readWaveFileIntoMemory("beatbox-wav-files/custom1_msg.wav", CUSTOM_1);
+		readWaveFileIntoMemory(languageManager->getWavFilename(CUSTOM_1), CUSTOM_1);
     }
 
 	std::string custom2Filename = languageManager->getWavFilename(CUSTOM_2);
     std::ifstream custom2File(custom2Filename);
     if(custom2File.good()) {
-		readWaveFileIntoMemory("beatbox-wav-files/custom2_msg.wav", CUSTOM_2);
+		readWaveFileIntoMemory(languageManager->getWavFilename(CUSTOM_2), CUSTOM_2);
     }
 
 	// Launch playback thread:
 	playbackThreadId = std::thread([this]() {
         this->playbackThread(nullptr);
     });
+
+	// In order to have the audio playback be smooth WHILE piper is translating messages, we must
+	// set the priority of the playback thread to be higher
+	pthread_t nativeHandle = playbackThreadId.native_handle();
+    struct sched_param params;
+    params.sched_priority = 2;
+
+    err = pthread_setschedparam(nativeHandle, SCHED_FIFO, &params);
+    if (err != 0) {
+        std::cerr << "Failed to set priority for playback thread: " << strerror(err) << std::endl;
+		std::cout << "Please check that you have run the program with sudo." << std::endl;
+    }
 }
 
 
@@ -72,12 +89,21 @@ AudioMixer::AudioMixer(LanguageManager *languageManagerReference) {
 void AudioMixer::readWaveFileIntoMemory(std::string fileName, enum Language language)
 {
 	wavedata_t *fetchedSound;
+
+	pthread_mutex_lock(&audioMutex);
+
 	switch(language) {
 		case FRENCH:
 			fetchedSound = &frenchSound;
 			break;
 		case GERMAN:
 			fetchedSound = &germanSound;
+			break;
+		case SPANISH:
+			fetchedSound = &spanishSound;
+			break;
+		case CHINESE:
+			fetchedSound = &chineseSound;
 			break;
 		case CUSTOM_1:
 			fetchedSound = &custom1Sound;
@@ -91,8 +117,7 @@ void AudioMixer::readWaveFileIntoMemory(std::string fileName, enum Language lang
 	}
 	assert(fetchedSound);
 
-	pthread_mutex_lock(&audioMutex);
-
+	pthread_mutex_lock(&fileAccessMutex);
 	// The PCM data in a wave file starts after the header:
 	const int PCM_DATA_OFFSET = 44;
 
@@ -129,6 +154,7 @@ void AudioMixer::readWaveFileIntoMemory(std::string fileName, enum Language lang
 
 	file.close();
 
+	pthread_mutex_unlock(&fileAccessMutex);
 	pthread_mutex_unlock(&audioMutex);
 }
 
@@ -162,6 +188,12 @@ void AudioMixer::queueSound(enum Language language)
 			break;
 		case GERMAN:
 			fetchedSound = &germanSound;
+			break;
+		case SPANISH:
+			fetchedSound = &spanishSound;
+			break;
+		case CHINESE:
+			fetchedSound = &chineseSound;
 			break;
 		case CUSTOM_1:
 			fetchedSound = &custom1Sound;
@@ -212,6 +244,8 @@ AudioMixer::~AudioMixer() {
 	delete[] englishSound.pData;
 	delete[] frenchSound.pData;
 	delete[] germanSound.pData;
+	delete[] spanishSound.pData;
+	delete[] chineseSound.pData;
 
 	// Custom sounds might not be loaded, so need to check for null before we free
 	if(custom1Sound.pData) {

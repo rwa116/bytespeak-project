@@ -14,7 +14,7 @@
 
 #define DEFAULT_VOLUME 80
 
-#define SAMPLE_RATE 22050
+#define SAMPLE_RATE 16000
 #define NUM_CHANNELS 1
 #define SAMPLE_SIZE (sizeof(short)) // bytes per sample
 
@@ -58,6 +58,7 @@ public:
 	// http://stackoverflow.com/questions/6787318/set-alsa-master-volume-from-c-code
 	int  getVolume(void);
 	void setVolume(int newVolume);
+	pthread_mutex_t fileAccessMutex = PTHREAD_MUTEX_INITIALIZER;
 private:
 	snd_pcm_t *handle;
 	unsigned long playbackBufferSize = 0;
@@ -66,6 +67,8 @@ private:
 	wavedata_t englishSound;
 	wavedata_t frenchSound;
 	wavedata_t germanSound;
+	wavedata_t spanishSound;
+	wavedata_t chineseSound;
 	wavedata_t custom1Sound;
 	wavedata_t custom2Sound;
 	playbackSound_t soundBite;
