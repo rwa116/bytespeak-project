@@ -30,7 +30,7 @@ COMMAND "${CMAKE_COMMAND}" -E copy_directory
 COMMENT "Copying WAVE files to public NFS directory")
 
 add_custom_command(TARGET byte_speaker POST_BUILD 
-COMMAND chmod -R 777 "~/cmpt433/public/myApps/bytespeak-wav-files"
+COMMAND find ~/cmpt433/public/myApps/bytespeak-wav-files -type f ! -name 'custom*' -exec chmod 777 {} +
 COMMENT "Giving perms to WAVE files in public NFS directory")
 
 # Copy the WAV folder to NFS

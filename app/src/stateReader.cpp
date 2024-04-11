@@ -1,0 +1,47 @@
+#include "stateReader.hpp" 
+#include "hal/audioMixer.hpp" 
+
+#include <iostream>
+
+StateReader::StateReader(AudioMixer *audioMixerInstance) {
+    isRunning = true;
+    audioMixer = audioMixerInstance;
+    i2cFileDesc = display.getDesc();
+
+    stateReaderThreadId = std::thread([this]() {
+        this->stateReaderThread(nullptr);
+    });
+}
+
+StateReader::~StateReader() {
+    isRunning = false;
+    stateReaderThreadId.join();
+}
+
+#define POT_MAX_VOLUME (4095.0 - (4095.0 / 100.0))
+#define POT_VOL_INCREMENT (POT_MAX_VOLUME / 100.0)
+void *StateReader::stateReaderThread(void *arg) {
+    (void)arg;
+    while(isRunning) {
+        int potValue = potController.getReading();
+
+        int newVolume = (int) ((double)potValue / POT_VOL_INCREMENT);
+        audioMixer->setVolume(newVolume);
+        display.writeNumber(i2cFileDesc, newVolume / 10);
+
+        sleepForMs(100);
+
+    }
+    return nullptr;
+}
+
+
+void StateReader::sleepForMs(long long delayInMs) {
+    const long long NS_PER_MS = 1000 * 1000;
+    const long long NS_PER_SECOND = 1000000000;
+    long long delayNs = delayInMs * NS_PER_MS;
+    int seconds = delayNs / NS_PER_SECOND;
+    int nanoseconds = delayNs % NS_PER_SECOND;
+    struct timespec reqDelay = {seconds, nanoseconds};
+    nanosleep(&reqDelay, (struct timespec *) NULL);
+}
