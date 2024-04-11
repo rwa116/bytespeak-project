@@ -197,10 +197,7 @@ function sendRequest(file) {
 	socket.emit('proc', file);
 
 	var timeout = setTimeout(function() {
-		var errMsg = "No response from back-end. Is NodeJS running on the target?";
 		$('#device-status').html("Offline")
-		$('#error-message').html(errMsg);
-		$('#error-box').css("display", "block");
 	}, 5000);
 
 	socket.on('fileContents', function(result) {
