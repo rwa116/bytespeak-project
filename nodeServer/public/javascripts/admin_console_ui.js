@@ -4,13 +4,13 @@
 // Make connection to server when web page is fully loaded.
 var socket = io.connect();
 $(document).ready(function() {
+	// Populate the voice dropdown based on the selected language
+	populateVoiceDropdown();
+	sendCommandViaUDP("getInfo"); 
 
 	window.setInterval(function() {sendRequest('uptime')}, 1000); //for proc/uptime
 	
-	//TODO: have this return device info in a json object
-	// Then, update the UI with up-to-date device info
-	window.setInterval(function() {sendCommandViaUDP("getInfo");}, 1000); 
-
+	// Buttons
 	$('#btnTerminate').click(function(){
 		sendCommandViaUDP("terminate");
 	});
@@ -41,15 +41,85 @@ $(document).ready(function() {
 		}
 	});
 
+	$('#updateVoice').click(function() {
+		var languageDropdown = document.getElementById("language-dropdown");
+		var voiceDropdown = document.getElementById("voice-dropdown");
+		var selectedLang = languageDropdown.value;
+		var selectedVoice = voiceDropdown.value;
+
+		document.getElementById("updating-voice").classList.remove('hidden');
+		sendCommandViaUDP("setVoice " + selectedLang + " " + selectedVoice);
+	});
+
 	document.getElementById("msgForm").addEventListener("submit", function(event) {
         event.preventDefault();
 
         var newMessage = document.getElementById("new-message").value;
 
+		document.getElementById("updating-msg").classList.remove('hidden');
         sendCommandViaUDP("espeak " + newMessage);
     });
 	
 });
+
+function populateVoiceDropdown() {
+	var languageDropdown = document.getElementById("language-dropdown");
+	var voiceDropdown = document.getElementById("voice-dropdown");
+	var selectedLang = languageDropdown.value;
+
+	// Clear the voice dropdown
+	voiceDropdown.innerHTML = "";
+
+	// Populate the voice dropdown
+	switch(selectedLang) {
+		case "en-US":
+			var mOption = document.createElement("option");
+			mOption.text = "Danny";
+			mOption.value = "m";
+			voiceDropdown.add(mOption);
+			var fOption = document.createElement("option");
+			fOption.text = "Amy";
+			fOption.value = "f";
+			voiceDropdown.add(fOption);
+			break;
+		case "es-ES":
+			var mOption = document.createElement("option");
+			mOption.text = "Carlos";
+			mOption.value = "m";
+			voiceDropdown.add(mOption);
+			var fOption = document.createElement("option");
+			fOption.text = "Maya";
+			fOption.value = "f";
+			voiceDropdown.add(fOption);
+			break;
+		case "fr-FR":
+			var mOption = document.createElement("option");
+			mOption.text = "Gilles";
+			mOption.value = "m";
+			voiceDropdown.add(mOption);
+			var fOption = document.createElement("option");
+			fOption.text = "Siwis";
+			fOption.value = "f";
+			voiceDropdown.add(fOption);
+			break;
+		case "de-DE":
+			var fOption = document.createElement("option");
+			fOption.text = "Eva";
+			fOption.value = "f";
+			voiceDropdown.add(fOption);
+			var mOption = document.createElement("option");
+			mOption.text = "Karlsson";
+			mOption.value = "m";
+			voiceDropdown.add(mOption);
+			break;
+		case "zh-CN":
+			var fOption = document.createElement("option");
+			fOption.text = "Huayan";
+			fOption.value = "f";
+			voiceDropdown.add(fOption);
+			break;
+	}
+}
 
 // Add event listener for file input change
 $('#fileUpload').on('change', function() {
@@ -80,14 +150,14 @@ function sendFileViaUDP(lang, fileData) {
 function sendCommandViaUDP(message) {
 	socket.emit('udpCommand', message);
 
-	var timeout = setTimeout(function() { 
-		var errMsg = "No response from back-end. Is NodeJS running on the target?";
-		$('#error-message').html(errMsg);
-		$('#error-box').css("display", "block");
-	}, 10000);
+	// var timeout = setTimeout(function() { 
+	// 	var errMsg = "No response from back-end. Is NodeJS running on the target?";
+	// 	$('#error-message').html(errMsg);
+	// 	$('#error-box').css("display", "block");
+	// }, 10000);
 
 	socket.on('commandReply', function(result) {
-		clearTimeout(timeout);
+		// clearTimeout(timeout);
 		try {
 			// see if reply is in json
 			var jsonObject = JSON.parse(result);
@@ -100,6 +170,10 @@ function sendCommandViaUDP(message) {
 		switch(splitRes[0]) {
 			case "currentMessage":
 				$('#current-message').html(splitRes[1]);
+				document.getElementById("updating-msg").classList.add('hidden');
+				break;
+			case "setVoice":
+				document.getElementById("updating-voice").classList.add('hidden');
 				break;
 			default:
 				console.log("Unknown command: " + splitRes[0]);
@@ -123,11 +197,8 @@ function sendRequest(file) {
 	socket.emit('proc', file);
 
 	var timeout = setTimeout(function() {
-		var errMsg = "No response from back-end. Is NodeJS running on the target?";
 		$('#device-status').html("Offline")
-		$('#error-message').html(errMsg);
-		$('#error-box').css("display", "block");
-	}, 2000);
+	}, 5000);
 
 	socket.on('fileContents', function(result) {
 		clearTimeout(timeout);

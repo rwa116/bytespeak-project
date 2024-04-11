@@ -10,8 +10,11 @@ add_compile_options(-fdiagnostics-color)
 
 # Enable address sanitizer
 # (Comment this out to make your code faster)
-add_compile_options(-fsanitize=address)
-add_link_options(-fsanitize=address)
+# add_compile_options(-fsanitize=address)
+# add_link_options(-fsanitize=address)
+
+# # Set ASAN_OPTIONS environment variable
+# set(ASAN_OPTIONS "verbosity=2")
 
 # What folders to build
 add_subdirectory(hal)  

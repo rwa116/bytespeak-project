@@ -95,6 +95,9 @@ enum Command Network::checkCommand(char* input) {
         if(token.find("espeak") != std::string::npos) {
             return ESPEAK;
         }
+        if(token.find("setVoice") != std::string::npos) {
+            return SET_VOICE;
+        }
         if(token.find("getInfo") != std::string::npos) {
             return GET_INFO;
         }
@@ -153,6 +156,70 @@ void Network::sendReply(enum Command command, char *input, int length, int socke
         case GET_INFO:
             snprintf(messageTx, MAX_LEN, "currentMessage;%s", translator->getCurrentMessage().c_str());
             break;
+        case SET_VOICE:
+        {
+            std::istringstream istream(input);
+            std::string token;
+            istream >> token;
+            istream >> token;
+
+            enum Language language;
+            enum Gender gender;
+            std::cout << "Token: " << token << "\n";
+
+            if(token.find("en-US") != std::string::npos) {
+                std::cout << "English\n";
+                language = ENGLISH;
+            }
+            else if(token.find("fr-FR") != std::string::npos) {
+                language = FRENCH;
+            }
+            else if(token.find("de-DE") != std::string::npos) {
+                language = GERMAN;
+            }
+            else if(token.find("es-ES") != std::string::npos) {
+                std::cout << "Spanish\n";
+                language = SPANISH;
+            }
+            else if(token.find("zh-CN") != std::string::npos) {
+                language = CHINESE;
+            }
+            else {
+                snprintf(messageTx, MAX_LEN, "Unknown language\n");
+                break;
+            }
+
+            istream >> token;
+            std::string message = translator->getCurrentMessage();
+
+            if(token.find("m") != std::string::npos) {
+                gender = MALE;
+            }
+            else if(token.find("f") != std::string::npos) {
+                gender = FEMALE;
+            }
+            else {
+                snprintf(messageTx, MAX_LEN, "Unknown gender\n");
+                break;
+            }
+            std::cout << "Token: " << token << "\n";
+
+            std::string filename = languageManager->getWavFilename(language);
+            std::cout << "Filename: " << filename << "\n";
+
+            // defaultMessage if ENGLISH, otherwise translate
+            std::string newMessage = language == ENGLISH ? message
+                : translator->translateToLanguage(message, language);
+
+            pthread_mutex_lock(&audioMixer->fileAccessMutex);
+            textToSpeech->translateToWave(newMessage, language, filename, gender);
+            pthread_mutex_unlock(&audioMixer->fileAccessMutex);
+
+            audioMixer->readWaveFileIntoMemory(filename, language);
+            
+            snprintf(messageTx, MAX_LEN, "setVoice;\n");
+            break;
+        }
         case CL1: 
         {
             std::istringstream istream(input);

@@ -16,6 +16,13 @@ TextToSpeech::TextToSpeech(LanguageManager *languageManagerReference, Translator
     // Initial message setup
     std::string defaultMessage = "This is a default message";
 
+    // Insert default options into map
+    languageGenderMap.insert({FRENCH, MALE});
+    languageGenderMap.insert({GERMAN, FEMALE});
+    languageGenderMap.insert({ENGLISH, FEMALE});
+    languageGenderMap.insert({SPANISH, MALE});
+    languageGenderMap.insert({CHINESE, FEMALE});
+
     for(enum Language language : languageManager->getDefaultLanguages()) {
         std::string filename = languageManager->getWavFilename(language);
         std::ifstream file(filename);
@@ -32,47 +39,77 @@ TextToSpeech::TextToSpeech(LanguageManager *languageManagerReference, Translator
 TextToSpeech::~TextToSpeech() {
 }
 
+enum Gender TextToSpeech::getCurrentGender(enum Language language) {
+    return languageGenderMap[language];
+}
+
 void TextToSpeech::translateToWave(std::string message, enum Language language, std::string filename, enum Gender gender) {
     std::string languageCode;
     std::string genderCode;
+    Gender tempGender = gender;
+    // If we did not specify, and a language has a selected gender, use it
+    if(gender == DEFAULT && languageGenderMap.find(language) != languageGenderMap.end()) {
+        tempGender = languageGenderMap[language];
+    }
     switch(language) {
         case FRENCH:
             languageCode = "fr_FR";
-            switch(gender) {
+            switch(tempGender) {
+                case FEMALE:
+                    genderCode = "siwis-low";
+                    languageGenderMap[language] = FEMALE;
+                    break;
                 default:
                     genderCode = "gilles-low";
+                    languageGenderMap[language] = MALE;
                     break;
             }
             break;
         case GERMAN:
             languageCode = "de_DE";
-            switch(gender) {
+            switch(tempGender) {
+                case MALE:
+                    genderCode = "karlsson-low";
+                    languageGenderMap[language] = MALE;
+                    break;
                 default:
                     genderCode = "eva_k-x_low";
+                    languageGenderMap[language] = FEMALE;
                     break;
             }
             break;
         case ENGLISH:
             languageCode = "en_US";
-            switch(gender) {
+            switch(tempGender) {
+                case MALE:
+                    genderCode = "danny-low";
+                    languageGenderMap[language] = MALE;
+                    break;
                 default:
                     genderCode = "amy-low";
+                    languageGenderMap[language] = FEMALE;
                     break;
             }
             break;
         case SPANISH:
             languageCode = "es_ES";
-            switch(gender) {
+            switch(tempGender) {
+                case FEMALE:
+                    genderCode = "mls_9972-low";
+                    languageGenderMap[language] = FEMALE;
+                    break;
                 default:
                     genderCode = "carlfm-x_low";
+                    languageGenderMap[language] = MALE;
                     break;
             }
             break;
         case CHINESE:
             languageCode = "zh_CN";
-            switch(gender) {
+            switch(tempGender) {
                 default:
                     genderCode = "huayan-x_low";
+                    languageGenderMap[language] = FEMALE;
                     break;
             }
             break;

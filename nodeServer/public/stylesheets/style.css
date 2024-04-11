@@ -50,6 +50,10 @@ h1, h2 {
 	display: none;
 }
 
+.hidden {
+    display: none;
+}
+
 .box {	
 	border: solid thin black;
 	background-color: #ddd;

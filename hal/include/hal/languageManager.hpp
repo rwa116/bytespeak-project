@@ -13,6 +13,7 @@ enum Language {
 	GERMAN,
 	SPANISH,
 	CHINESE,
+	UNKNOWN_LANG,
 	CUSTOM_1,
 	CUSTOM_2,
 };

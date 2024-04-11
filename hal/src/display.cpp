@@ -84,6 +84,8 @@ Display::~Display() {
 
 
 int Display::initI2C() {
+    system("config-pin P9_17 i2c");
+    system("config-pin P9_18 i2c");
     int i2cFileDesc = initI2cBus("/dev/i2c-1", 0x20);
 
     // turn on displays
