@@ -6,13 +6,11 @@ var socket = io.connect();
 $(document).ready(function() {
 	// Populate the voice dropdown based on the selected language
 	populateVoiceDropdown();
+	sendCommandViaUDP("getInfo"); 
 
 	window.setInterval(function() {sendRequest('uptime')}, 1000); //for proc/uptime
 	
-	//TODO: have this return device info in a json object
-	// Then, update the UI with up-to-date device info
-	window.setInterval(function() {sendCommandViaUDP("getInfo");}, 1000); 
-
+	// Buttons
 	$('#btnTerminate').click(function(){
 		sendCommandViaUDP("terminate");
 	});
@@ -58,6 +56,7 @@ $(document).ready(function() {
 
         var newMessage = document.getElementById("new-message").value;
 
+		document.getElementById("updating-msg").classList.remove('hidden');
         sendCommandViaUDP("espeak " + newMessage);
     });
 	
@@ -151,14 +150,14 @@ function sendFileViaUDP(lang, fileData) {
 function sendCommandViaUDP(message) {
 	socket.emit('udpCommand', message);
 
-	var timeout = setTimeout(function() { 
-		var errMsg = "No response from back-end. Is NodeJS running on the target?";
-		$('#error-message').html(errMsg);
-		$('#error-box').css("display", "block");
-	}, 10000);
+	// var timeout = setTimeout(function() { 
+	// 	var errMsg = "No response from back-end. Is NodeJS running on the target?";
+	// 	$('#error-message').html(errMsg);
+	// 	$('#error-box').css("display", "block");
+	// }, 10000);
 
 	socket.on('commandReply', function(result) {
-		clearTimeout(timeout);
+		// clearTimeout(timeout);
 		try {
 			// see if reply is in json
 			var jsonObject = JSON.parse(result);
@@ -171,6 +170,7 @@ function sendCommandViaUDP(message) {
 		switch(splitRes[0]) {
 			case "currentMessage":
 				$('#current-message').html(splitRes[1]);
+				document.getElementById("updating-msg").classList.add('hidden');
 				break;
 			case "setVoice":
 				document.getElementById("updating-voice").classList.add('hidden');
@@ -201,7 +201,7 @@ function sendRequest(file) {
 		$('#device-status').html("Offline")
 		$('#error-message').html(errMsg);
 		$('#error-box').css("display", "block");
-	}, 2000);
+	}, 5000);
 
 	socket.on('fileContents', function(result) {
 		clearTimeout(timeout);

@@ -74,11 +74,11 @@ function handleCommand(socket) {
 
 		var client = dgram.createSocket('udp4');
 
-		var timeout = setTimeout(function() {
-			var errMsg = "No response from ByteSpeak application. Is it running?"
-			socket.emit('errorReply', errMsg);
-			client.close();
-		}, 20000);
+		// var timeout = setTimeout(function() {
+		// 	var errMsg = "No response from ByteSpeak application. Is it running?"
+		// 	socket.emit('errorReply', errMsg);
+		// 	client.close();
+		// }, 20000);
 
 		client.send(buffer, 0, buffer.length, PORT, HOST, function(err, bytes) {
 			if (err) 
@@ -93,16 +93,16 @@ function handleCommand(socket) {
 			var reply = message.toString('utf8')
 			console.log("reply: ", reply)
 			socket.emit('commandReply', reply);
-			clearTimeout(timeout);
+			// clearTimeout(timeout);
 			client.close();
 
 		});
 		client.on("UDP Client: close", function() {
 			console.log("closed");
-			clearTimeout(timeout);
+			// clearTimeout(timeout);
 		});
 		client.on("UDP Client: error", function(err) {
-			clearTimeout(timeout);
+			// clearTimeout(timeout);
 			console.log("error: ",err);
 		});
 	});

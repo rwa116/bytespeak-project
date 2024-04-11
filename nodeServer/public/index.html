@@ -21,19 +21,23 @@
 						<input type="text" id="new-message" placeholder="Please type the new English message here." required>
 						<button type="submit">Submit</button>  
 					</form>
-					<p><b>Voice Selection:</b></p>
-					<select id="language-dropdown" onchange="populateVoiceDropdown()">
-						<option value="en-US">English</option>
-						<option value="es-ES">Spanish</option>
-						<option value="fr-FR">French</option>
-						<option value="de-DE">German</option>
-						<option value="zh-CN">Chinese</option>
-					</select>
-					<select id="voice-dropdown">
-						<!--Populated by JavaScript-->
-					</select>
-					<button type="submit" id="updateVoice">Update</button> 
-					<p id="updating-voice" class="hidden"><b>Updating...</b></p>
+					<p id="updating-msg" class="hidden" style="color: red;"><b>Updating...</b></p>
+					<div>
+						<p><b>Voice Selection:</b></p>
+						<select id="language-dropdown" onchange="populateVoiceDropdown()">
+							<option value="en-US">English</option>
+							<option value="es-ES">Spanish</option>
+							<option value="fr-FR">French</option>
+							<option value="de-DE">German</option>
+							<option value="zh-CN">Chinese</option>
+						</select>
+						<select id="voice-dropdown">
+							<!--Populated by JavaScript-->
+						</select>
+						<button type="submit" id="updateVoice">Update</button> 
+						<p id="updating-voice" class="hidden" style="color: red;"><b>Updating...</b></p>
+					</div>
+					
 					<h3> Upload dictation </h3>
 					<p>Note: only .wav files accepted.</p>
 					<input type="file" id="fileUpload" name="file" accept=".wav"></br>

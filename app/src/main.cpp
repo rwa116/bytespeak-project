@@ -4,6 +4,11 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <sys/resource.h>
+#include <unistd.h>
+#include <iostream>
+#include <cstdlib>
+#include <cerrno>
 
 #include "shutdown.hpp"
 #include "textToSpeech.hpp"
@@ -16,6 +21,18 @@
 #include "translator.hpp"
 
 int main() {
+    const rlim_t memory_limit = 500 * 1024 * 1024; // 200 MiB in bytes
+
+    struct rlimit rlim;
+    rlim.rlim_cur = memory_limit;
+    rlim.rlim_max = memory_limit;
+
+    if (setrlimit(RLIMIT_AS, &rlim) != 0) {
+        std::cerr << "Failed to set memory limit: " << strerror(errno) << std::endl;
+        return 1;
+    }
+    std::cout << "Memory limit set to " << memory_limit << " bytes" << std::endl;
+
     LanguageManager languageManager;
     Translator translator;
     TextToSpeech textToSpeech(&languageManager, &translator);
