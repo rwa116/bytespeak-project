@@ -9,6 +9,7 @@
 #include "hal/audioMixer.hpp"
 #include "hal/pruDriver.hpp"
 #include "hal/ledPanel.hpp"
+#include "hal/buzzer.hpp"
 
 class StateReader {
     public:
@@ -22,6 +23,7 @@ class StateReader {
         AudioMixer *audioMixer;
         LanguageManager *languageManager;
         LEDPanel *ledPanel;
+        
 
         int i2cFileDesc;        
 
