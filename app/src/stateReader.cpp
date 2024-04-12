@@ -26,6 +26,7 @@ void *StateReader::stateReaderThread(void *arg) {
     (void)arg;
     long long lastTime = getCurrentTimeMs();
     while(isRunning) {
+
         int potValue = potController.getReading();
 
         int newVolume = (int) ((double)potValue / POT_VOL_INCREMENT);
@@ -33,10 +34,13 @@ void *StateReader::stateReaderThread(void *arg) {
         display.writeNumber(i2cFileDesc, newVolume / 10);
 
         long long currentTime = getCurrentTimeMs();
+        // std::cout << "checking for button presses" << std::endl;
+
         if(currentTime > lastTime + 300 && pruDriver.isRightPressed()) {
             lastTime = currentTime;
-            // std::cout << "Right Pressed" << std::endl;
+
             languageManager->cycleLanguage();
+            buzzer buz(1);
             enum Language currentLanguage = languageManager->getCurrentLanguage();
             audioMixer->queueSound(currentLanguage);
             ledPanel->displayFlag(currentLanguage);
