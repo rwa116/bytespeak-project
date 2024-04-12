@@ -1,3 +1,7 @@
+// ADA420 LED Matrix Driver
+// 
+// Large chunk of implementations to set up pins and drive led matrix are attributed to Janet Mardjuki and Jasper Wong
+
 #include "hal/ledPanel.hpp"
 
 LEDPanel::LEDPanel()
@@ -16,12 +20,8 @@ LEDPanel::LEDPanel()
 LEDPanel::~LEDPanel()
 {
     assert(isInitialized);
+    drawBlank();
     isRunning = false;
-    for (int y = 0; y < NUM_ROWS; y++){
-        for (int x = 0; x < NUM_COLS; x++){
-            screen[x][y] = 0; //off
-        }
-    }
     renderingThreadID.join();
     isInitialized = false;
 }
@@ -50,7 +50,7 @@ void LEDPanel::displayFlag(enum Language language)
             drawChina();
             break;
         default:
-            drawBlank();
+            drawCustom();
             // draw something unique
     }
 }
@@ -66,7 +66,7 @@ void LEDPanel::sleepForMs(long long delayInMs)
     nanosleep(&reqDelay, (struct timespec *)NULL);
 }
 
-// From sample code
+// From sample code written by Janet Mardjuki and Jasper Wong
 void LEDPanel::initializeGPIOPins()
 {
     // !Upper led
@@ -336,6 +336,46 @@ void LEDPanel::drawSpain()
             } else {
                 screen[x][y] = 3; //yellow
             }
+        }
+    }
+    screen[2][5] = 4;
+    screen[2][10] = 4;
+    screen[9][5] = 4;
+    screen[9][10] = 4;
+    screen[2][7] = 7;
+    screen[2][9] = 7;
+    screen[9][7] = 7;
+    screen[9][9] = 7;
+    screen[5][5] = 1;
+    screen[6][5] = 1;
+    screen[5][10] = 7;
+    screen[6][10] = 1;
+    for (int x = 2; x <= 9; x++){
+        if (x == 6 || x == 7){
+            screen[x][6] = 7;
+        } else {
+            screen[x][6] = 1;
+        }
+    }
+    for (int x = 4; x <= 7; x++){
+        if (x == 6 || x == 7){
+            screen[x][7] = 7;
+        } else {
+            screen[x][7] = 1;
+        }
+    }
+    for (int x = 2; x <= 9; x++){
+        if (x == 4 || x == 5){
+            screen[x][8] = 7;
+        } else {
+            screen[x][8] = 1;
+        }
+    }
+    for (int x = 4; x <= 7; x++){
+        if (x == 4 || x == 5){
+            screen[x][9] = 7;
+        } else {
+            screen[x][9] = 1;
         }
     }
 }

@@ -50,7 +50,7 @@ int main() {
     AudioMixer audioMixer(&languageManager);
     ShutdownManager shutdownManager;
     StateReader stateReader(&audioMixer, &languageManager, &ledDisplay);
-    Network network(&shutdownManager, &languageManager, &textToSpeech, &translator, &audioMixer);
+    Network network(&shutdownManager, &languageManager, &textToSpeech, &translator, &audioMixer, &ledDisplay);
     NFCReader reader("/dev/i2c-2", 0x24, &shutdownManager);
 
     // Main loop
@@ -81,12 +81,13 @@ int main() {
         // Test NFC Reader
         std::string uid = reader.waitForCardAndReadUID();
         if(!shutdownManager.isShutdown()){
+            buzzer buz(1);
             std::cout << "UID = " << uid << std::endl;
             languageManager.setLanguage(languageMap[uid]);
             audioMixer.queueSound(languageMap[uid]);
             ledDisplay.displayFlag(languageMap[uid]);
             // std::this_thread::sleep_for(std::chrono::seconds(1));
-            std::this_thread::sleep_for(std::chrono::seconds(5));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
         
     }

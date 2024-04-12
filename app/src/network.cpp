@@ -26,13 +26,14 @@ Network::Network() {
 }
 
 Network::Network(ShutdownManager *shutdownInstance, LanguageManager *languageManagerInstance, TextToSpeech *textInstance, 
-            Translator *translatorInstance, AudioMixer *audioInstance) {
+            Translator *translatorInstance, AudioMixer *audioInstance, LEDPanel *ledDisplayInstance) {
     isRunning = true;
     shutdownManager = shutdownInstance;
     languageManager = languageManagerInstance;
     textToSpeech = textInstance;
     translator = translatorInstance;
     audioMixer = audioInstance;
+    ledPanel = ledDisplayInstance;
 
     networkThreadId = std::thread([this]() {
         this->networkThread(nullptr);

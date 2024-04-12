@@ -4,6 +4,7 @@
 // 
 // A C++ adaptation of the test sample code originally written by Janet Mardjuki (December 2015)
 // and modified by Jasper Wong (March 2022).
+// All credit for code which sets up and drives the matrix according to screen[][] goes to the original authors.
 
 #ifndef _LED_PANEL_H_
 #define _LED_PANEL_H_
