@@ -1,6 +1,6 @@
 # Build the app, using the HAL
 
-include_directories(include)
+include_directories(include ../pru-bytespeak/)
 file(GLOB MY_SOURCES "src/*.cpp")
 add_executable(byte_speaker ${MY_SOURCES})
 
