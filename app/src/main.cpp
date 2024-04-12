@@ -42,6 +42,10 @@ int main() {
     languageMap["44:20:07:04"] = ENGLISH;
     languageMap["04:08:04:a2"] = FRENCH;
     languageMap["04:09:04:c2"] = GERMAN;
+    languageMap["04:20:04:5c"] = SPANISH;
+    languageMap["44:20:07:05"] = CHINESE;
+    languageMap["04:20:04:08"] = CUSTOM_1;
+    languageMap["04:20:04:27"] = CUSTOM_2;
 
     LEDPanel ledDisplay;
     LanguageManager languageManager;
