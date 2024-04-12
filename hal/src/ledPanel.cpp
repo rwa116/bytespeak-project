@@ -21,6 +21,7 @@ LEDPanel::~LEDPanel()
 {
     assert(isInitialized);
     drawBlank();
+    refreshMatrix();
     isRunning = false;
     renderingThreadID.join();
     isInitialized = false;
@@ -28,6 +29,10 @@ LEDPanel::~LEDPanel()
 
 void LEDPanel::displayFlag(enum Language language)
 {
+    if (isTranslationOccuring){
+        return;
+    }
+
     switch(language){
         case ENGLISH:
             // draw Canada flag
@@ -53,6 +58,16 @@ void LEDPanel::displayFlag(enum Language language)
             drawCustom();
             // draw something unique
     }
+}
+
+void LEDPanel::triggerTranslationStatus(bool startingTranslation)
+{
+    if (startingTranslation){
+        drawBlank();
+        drawLoading();
+    }
+    isTranslationOccuring = startingTranslation;
+    
 }
 
 void LEDPanel::sleepForMs(long long delayInMs)
@@ -418,6 +433,15 @@ void LEDPanel::drawBlank()
     for (int y = 0; y < NUM_ROWS; y++){
         for (int x = 0; x < NUM_COLS; x++){
             screen[x][y] = 0; //off
+        }
+    }
+}
+
+void LEDPanel::drawLoading()
+{
+    for (int y = 0; y < 8; y++){
+        if (y % 2 == 0){
+            screen[0][y] = 7;
         }
     }
 }

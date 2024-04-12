@@ -52,10 +52,12 @@ public:
     LEDPanel();
     ~LEDPanel();
     void displayFlag(enum Language language);
+    void triggerTranslationStatus(bool startingTranslation);
 
 private:
 
     bool isInitialized = false;
+    bool isTranslationOccuring = false;
 
     /* LED Screen Values */
     int screen[NUM_COLS][NUM_ROWS];
@@ -97,6 +99,7 @@ private:
     void drawChina();
     void drawCustom();
     void drawBlank();
+    void drawLoading();
 
 };
 
