@@ -17,6 +17,11 @@ LEDPanel::~LEDPanel()
 {
     assert(isInitialized);
     isRunning = false;
+    for (int y = 0; y < NUM_ROWS; y++){
+        for (int x = 0; x < NUM_COLS; x++){
+            screen[x][y] = 0; //off
+        }
+    }
     renderingThreadID.join();
     isInitialized = false;
 }
@@ -35,6 +40,14 @@ void LEDPanel::displayFlag(enum Language language)
         case GERMAN:
             // draw German flag
             drawGermany();
+            break;
+        case SPANISH:
+            // draw Spanish flag
+            drawSpain();
+            break;
+        case CHINESE:
+            // draw Chinese flag
+            drawChina();
             break;
         default:
             drawBlank();
@@ -247,9 +260,7 @@ void LEDPanel::drawCanada()
         for (int x = 0; x < NUM_COLS; x++){
             if ((x == 15 || x == 16) && (y == 7 || y == 8)){
                 screen[x][y] = 1; //red
-            } else if (x <= 9){
-                screen[x][y] = 1; //red
-            } else if (x >= 22) {
+            } else if (x <= 6 || x >= 24){
                 screen[x][y] = 1; //red
             } else {
                 screen[x][y] = 7; //white
@@ -288,15 +299,42 @@ void LEDPanel::drawGermany()
     }
 }
 
+void LEDPanel::drawSpain()
+{
+    for (int y = 0; y < NUM_ROWS; y++){
+        for (int x = 0; x < NUM_COLS; x++){
+            if (y <= 3 || y >= 12){
+                screen[x][y] = 1; //red
+            } else {
+                screen[x][y] = 3; //yellow
+            }
+        }
+    }
+}
+
+void LEDPanel::drawChina()
+{
+    for (int y = 0; y < NUM_ROWS; y++){
+        for (int x = 0; x < NUM_COLS; x++){
+            screen[x][y] = 1; //red
+        }
+    }
+}
+
+void LEDPanel::drawCustom()
+{
+    for (int y = 0; y < NUM_ROWS; y++){
+        for (int x = 0; x < NUM_COLS; x++){
+            screen[x][y] = x;
+        }
+    }
+}
+
 void LEDPanel::drawBlank()
 {
-    // for (int y = 0; y < NUM_ROWS; y++){
-    //     for (int x = 0; x < NUM_COLS; x++){
-    //         screen[x][y] = 0; //off
-    //     }
-    // }
-    int y = 0;
-    for (int x = 0; x < 8; x++){
-        screen[x][y] = x;
+    for (int y = 0; y < NUM_ROWS; y++){
+        for (int x = 0; x < NUM_COLS; x++){
+            screen[x][y] = 0; //off
+        }
     }
 }

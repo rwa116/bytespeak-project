@@ -92,6 +92,9 @@ private:
     void drawCanada();
     void drawFrance();
     void drawGermany();
+    void drawSpain();
+    void drawChina();
+    void drawCustom();
     void drawBlank();
 
 };
