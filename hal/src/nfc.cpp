@@ -137,7 +137,7 @@ bool NFCReader::sendCommandAndWaitForResponse(unsigned char *command, int comman
             return false;
         }
 
-    } while (bytesRead == 0 || (int)response[0] == 0 || !shutdownManager->isShutdown());
+    } while ((bytesRead == 0 || (int)response[0] == 0 ) && !shutdownManager->isShutdown());
 
 
  

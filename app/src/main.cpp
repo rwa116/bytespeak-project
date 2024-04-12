@@ -80,12 +80,14 @@ int main() {
 
         // Test NFC Reader
         std::string uid = reader.waitForCardAndReadUID();
-        std::cout << "UID = " << uid << std::endl;
-        languageManager.setLanguage(languageMap[uid]);
-        audioMixer.queueSound(languageMap[uid]);
-        ledDisplay.displayFlag(languageMap[uid]);
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
-        std::this_thread::sleep_for(std::chrono::seconds(5));
+        if(!shutdownManager.isShutdown()){
+            std::cout << "UID = " << uid << std::endl;
+            languageManager.setLanguage(languageMap[uid]);
+            audioMixer.queueSound(languageMap[uid]);
+            ledDisplay.displayFlag(languageMap[uid]);
+            // std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+        }
         
     }
 
