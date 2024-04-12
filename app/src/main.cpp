@@ -22,6 +22,7 @@
 #include "hal/audioMixer.hpp"
 #include "hal/nfc.hpp"
 #include "translator.hpp"
+#include "hal/ledPanel.hpp"
 
 int main() {
     const rlim_t memory_limit = 500 * 1024 * 1024; // 200 MiB in bytes
@@ -36,6 +37,7 @@ int main() {
     }
     std::cout << "Memory limit set to " << memory_limit << " bytes" << std::endl;
 
+    LEDPanel ledDisplay;
     LanguageManager languageManager;
     Translator translator;
     TextToSpeech textToSpeech(&languageManager, &translator);
@@ -43,27 +45,39 @@ int main() {
     ShutdownManager shutdownManager;
     StateReader stateReader(&audioMixer);
     Network network(&shutdownManager, &languageManager, &textToSpeech, &translator, &audioMixer);
-    //NFCReader reader("/dev/i2c-2", 0x24);
+    NFCReader reader("/dev/i2c-2", 0x24);
 
     // Main loop
     while(!shutdownManager.isShutdown()) {
+
+        // Test Language Dictation
         audioMixer.queueSound(ENGLISH);
+        std::cout << "displaying ENGLISH\n";
+        ledDisplay.displayFlag(ENGLISH);
         std::this_thread::sleep_for(std::chrono::seconds(5));
         audioMixer.queueSound(FRENCH);
+        std::cout << "displaying FRENCH\n";
+        ledDisplay.displayFlag(FRENCH);
         std::this_thread::sleep_for(std::chrono::seconds(5));
         audioMixer.queueSound(GERMAN);
+        std::cout << "displaying GERMAN\n";
+        ledDisplay.displayFlag(GERMAN);
         std::this_thread::sleep_for(std::chrono::seconds(5));
-        audioMixer.queueSound(SPANISH);
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        audioMixer.queueSound(CHINESE);
-        std::this_thread::sleep_for(std::chrono::seconds(5));
+        
+        // audioMixer.queueSound(SPANISH);
+        // std::this_thread::sleep_for(std::chrono::seconds(5));
+        // audioMixer.queueSound(CHINESE);
+        // std::this_thread::sleep_for(std::chrono::seconds(5));
+        // audioMixer.queueSound(CUSTOM_1);
+        // std::this_thread::sleep_for(std::chrono::seconds(5));
+        // audioMixer.queueSound(CUSTOM_2);
+
+        // Test NFC Reader
         // std::string uid = reader.waitForCardAndReadUID();
         // std::cout << "UID = " << uid << std::endl;
         // // std::this_thread::sleep_for(std::chrono::seconds(1));
         // std::this_thread::sleep_for(std::chrono::seconds(5));
-        audioMixer.queueSound(CUSTOM_1);
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        // audioMixer.queueSound(CUSTOM_2);
+        
     }
 
     shutdownManager.waitForShutdown();
