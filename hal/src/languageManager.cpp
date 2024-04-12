@@ -33,18 +33,18 @@ std::vector<enum Language> LanguageManager::getDefaultLanguages(void) {
 
 void LanguageManager::cycleLanguage(void)
 {
-	currentLanguageIndex = (currentLanguageIndex + 1) % defaultLanguages.size();
+	currentLanguageIndex = (currentLanguageIndex + 1) % loadedLanguages.size();
 }
 
 enum Language LanguageManager::getCurrentLanguage(void)
 {
-	return defaultLanguages[currentLanguageIndex];
+	return loadedLanguages[currentLanguageIndex];
 }
 
 void LanguageManager::setLanguage(enum Language newLanguage)
 {
-	for(unsigned int i = 0; i < defaultLanguages.size(); i++){
-		if (defaultLanguages[i] == newLanguage){
+	for(unsigned int i = 0; i < loadedLanguages.size(); i++){
+		if (loadedLanguages[i] == newLanguage){
 			currentLanguageIndex = i;
 		}
 	}

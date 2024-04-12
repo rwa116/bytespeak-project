@@ -32,6 +32,7 @@ public:
 private:
 	std::unordered_map<int, std::string> audioFilenames;
 	std::vector<enum Language> defaultLanguages = {ENGLISH, FRENCH, GERMAN, SPANISH, CHINESE};
+	std::vector<enum Language> loadedLanguages = {ENGLISH, FRENCH, GERMAN, SPANISH, CHINESE, CUSTOM_1, CUSTOM_2};
 	int currentLanguageIndex;
 };
 
