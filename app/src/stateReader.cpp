@@ -3,9 +3,11 @@
 
 #include <iostream>
 
-StateReader::StateReader(AudioMixer *audioMixerInstance) {
+StateReader::StateReader(AudioMixer *audioMixerInstance, LanguageManager *languageManagerInstance, LEDPanel *ledPanelInstance) {
     isRunning = true;
     audioMixer = audioMixerInstance;
+    languageManager = languageManagerInstance;
+    ledPanel = ledPanelInstance;
     i2cFileDesc = display.getDesc();
 
     stateReaderThreadId = std::thread([this]() {
@@ -34,10 +36,17 @@ void *StateReader::stateReaderThread(void *arg) {
         if(currentTime > lastTime + 300 && pruDriver.isRightPressed()) {
             lastTime = currentTime;
             // std::cout << "Right Pressed" << std::endl;
+            languageManager->cycleLanguage();
+            enum Language currentLanguage = languageManager->getCurrentLanguage();
+            audioMixer->queueSound(currentLanguage);
+            ledPanel->displayFlag(currentLanguage);
         }
         if(currentTime > lastTime + 500 && pruDriver.isDownPressed()) {
             lastTime = currentTime;
             // std::cout << "Down Pressed" << std::endl;
+            enum Language currentLanguage = languageManager->getCurrentLanguage();
+            audioMixer->queueSound(currentLanguage);
+            ledPanel->displayFlag(currentLanguage);
         }
 
         sleepForMs(100);

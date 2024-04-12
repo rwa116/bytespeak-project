@@ -19,6 +19,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <assert.h>
+#include <thread>
 
 #include <hal/languageManager.hpp>
 
@@ -47,7 +48,7 @@
 
 class LEDPanel {
 public:
-    LEDPanel(const char* device, int address);
+    LEDPanel();
     ~LEDPanel();
     void displayFlag(enum Language language);
 
@@ -72,6 +73,10 @@ private:
     int fileDesc_b;
     int fileDesc_c;
 
+    // thread to constantly render image
+    std::thread renderingThreadID;
+    bool isRunning;
+
     // private methods
     void sleepForMs(long long delayInMs);
     void initializeGPIOPins();
@@ -83,6 +88,7 @@ private:
     void setColourTop(int colour);
     void setColourBottom(int colour);
     void refreshMatrix();
+    void* renderThreadFunction(void* arg);
     void drawCanada();
     void drawFrance();
     void drawGermany();

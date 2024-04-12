@@ -1,17 +1,23 @@
 #include "hal/ledPanel.hpp"
-    
-LEDPanel::LEDPanel(const char* device, int address)
+
+LEDPanel::LEDPanel()
 {
     assert(!isInitialized);
     memset(screen, 0, sizeof(screen));
     initializeGPIOPins();
+    drawCanada();
+    renderingThreadID = std::thread([this]() {
+        this->renderThreadFunction(nullptr);
+    });
+    isRunning = true;
     isInitialized = true;
 }
 
 LEDPanel::~LEDPanel()
 {
     assert(isInitialized);
-    // cleanup?
+    isRunning = false;
+    renderingThreadID.join();
     isInitialized = false;
 }
 
@@ -21,21 +27,17 @@ void LEDPanel::displayFlag(enum Language language)
         case ENGLISH:
             // draw Canada flag
             drawCanada();
-            refreshMatrix();
             break;
         case FRENCH:
             // draw French flag
             drawFrance();
-            refreshMatrix();
             break;
         case GERMAN:
             // draw German flag
             drawGermany();
-            refreshMatrix();
             break;
         default:
             drawBlank();
-            refreshMatrix();
             // draw something unique
     }
 }
@@ -230,6 +232,15 @@ void LEDPanel::refreshMatrix()
     }
 }
 
+void* LEDPanel::renderThreadFunction(void* arg)
+{
+    (void)arg;
+    while (isRunning) {
+        refreshMatrix();
+    }
+    return nullptr;
+}
+
 void LEDPanel::drawCanada()
 {
     for (int y = 0; y < NUM_ROWS; y++){
@@ -266,12 +277,12 @@ void LEDPanel::drawGermany()
 {
     for (int y = 0; y < NUM_ROWS; y++){
         for (int x = 0; x < NUM_COLS; x++){
-            if (x <= 9){
-                screen[x][y] = 4; //blue
-            } else if (x >= 22) {
+            if (y <= 5){
+                screen[x][y] = 0; //black
+            } else if (y <= 10) {
                 screen[x][y] = 1; //red
             } else {
-                screen[x][y] = 7; //white
+                screen[x][y] = 3; //yellow
             }
         }
     }
