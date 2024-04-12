@@ -17,6 +17,8 @@
 typedef struct {
     // 1 byte
     bool isRightPressed;
+    // 1 byte
+    bool isDownPressed;
     
 } sharedMemStruct_t;
 

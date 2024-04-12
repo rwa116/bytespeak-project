@@ -24,6 +24,7 @@
 
 PruDriver::PruDriver() {
     system("config-pin P8_15 pruin");
+    system("config-pin P8_16 pruin");
     volatile void *pPruBase = getPruMmapAddr();
     pSharedPru0 = (volatile sharedMemStruct_t *)(PRU0_MEM_FROM_BASE(pPruBase));
 }
@@ -34,6 +35,10 @@ PruDriver::~PruDriver() {
 
 bool PruDriver::isRightPressed() {
     return pSharedPru0->isRightPressed;
+}
+
+bool PruDriver::isDownPressed() {
+    return pSharedPru0->isDownPressed;
 }
 
 // Return the address of the PRU's base memory

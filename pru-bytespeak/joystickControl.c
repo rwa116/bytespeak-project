@@ -20,6 +20,9 @@ volatile register uint32_t __R31;
 // GPIO Input: P8_15 = pru0_pru_r31_15 
 //   = JSRT (Joystick Right) on Zen Cape
 #define JOYSTICK_RIGHT_MASK (1 << 15)
+// GPIO Input: P8_16 = pru0_pru_r31_14
+//   = JSDN (Joystick Down) on Zen Cape
+#define JOYSTICK_DOWN_MASK (1 << 14)
 
 
 // Shared Memory Configuration
@@ -37,12 +40,14 @@ void main(void)
 
     //Initialize
     pSharedMemStruct->isRightPressed = false;
+    pSharedMemStruct->isDownPressed = false;
 
     while(true) {
         __delay_cycles(sleepCycles);
 
         // Get Joystick Information
         pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
+        pSharedMemStruct->isDownPressed = (__R31 & JOYSTICK_DOWN_MASK) == 0;
     }
 
     __halt();

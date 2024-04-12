@@ -8,6 +8,7 @@ public:
     PruDriver();
     ~PruDriver();
     bool isRightPressed();
+    bool isDownPressed();
 private:
     volatile sharedMemStruct_t *pSharedPru0;
 

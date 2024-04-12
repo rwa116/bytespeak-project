@@ -33,7 +33,11 @@ void *StateReader::stateReaderThread(void *arg) {
         long long currentTime = getCurrentTimeMs();
         if(currentTime > lastTime + 300 && pruDriver.isRightPressed()) {
             lastTime = currentTime;
-            //std::cout << "Button Pressed" << std::endl;
+            // std::cout << "Right Pressed" << std::endl;
+        }
+        if(currentTime > lastTime + 500 && pruDriver.isDownPressed()) {
+            lastTime = currentTime;
+            // std::cout << "Down Pressed" << std::endl;
         }
 
         sleepForMs(100);
