@@ -4,6 +4,7 @@
 // 
 // A C++ adaptation of the test sample code originally written by Janet Mardjuki (December 2015)
 // and modified by Jasper Wong (March 2022).
+// All credit for code which sets up and drives the matrix according to screen[][] goes to the original authors.
 
 #ifndef _LED_PANEL_H_
 #define _LED_PANEL_H_
@@ -51,10 +52,12 @@ public:
     LEDPanel();
     ~LEDPanel();
     void displayFlag(enum Language language);
+    void triggerTranslationStatus(bool startingTranslation);
 
 private:
 
     bool isInitialized = false;
+    bool isTranslationOccuring = false;
 
     /* LED Screen Values */
     int screen[NUM_COLS][NUM_ROWS];
@@ -92,7 +95,11 @@ private:
     void drawCanada();
     void drawFrance();
     void drawGermany();
+    void drawSpain();
+    void drawChina();
+    void drawCustom();
     void drawBlank();
+    void drawLoading();
 
 };
 

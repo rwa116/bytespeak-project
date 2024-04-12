@@ -11,6 +11,7 @@
 #include <translator.hpp>
 #include <hal/audioMixer.hpp>
 #include <hal/languageManager.hpp>
+#include <hal/ledPanel.hpp>
 
 enum Command {
     ESPEAK,
@@ -33,7 +34,7 @@ class Network {
 public:
     Network();
     Network(ShutdownManager *shutdownInstance, LanguageManager *languageManagerInstance, TextToSpeech *textInstance, 
-            Translator *translatorInstance, AudioMixer *audioInstance);
+            Translator *translatorInstance, AudioMixer *audioInstance, LEDPanel *ledDisplayInstance);
     ~Network();
 private:
     std::thread networkThreadId;
@@ -42,6 +43,7 @@ private:
     TextToSpeech *textToSpeech;
     Translator *translator;
     AudioMixer *audioMixer;
+    LEDPanel *ledPanel;
 
     enum Mode mode = NORMAL;
     int numPacketsLeft = 0;

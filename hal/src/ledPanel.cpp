@@ -1,3 +1,7 @@
+// ADA420 LED Matrix Driver
+// 
+// Large chunk of implementations to set up pins and drive led matrix are attributed to Janet Mardjuki and Jasper Wong
+
 #include "hal/ledPanel.hpp"
 
 LEDPanel::LEDPanel()
@@ -16,6 +20,8 @@ LEDPanel::LEDPanel()
 LEDPanel::~LEDPanel()
 {
     assert(isInitialized);
+    drawBlank();
+    refreshMatrix();
     isRunning = false;
     renderingThreadID.join();
     isInitialized = false;
@@ -23,6 +29,10 @@ LEDPanel::~LEDPanel()
 
 void LEDPanel::displayFlag(enum Language language)
 {
+    if (isTranslationOccuring){
+        return;
+    }
+
     switch(language){
         case ENGLISH:
             // draw Canada flag
@@ -36,10 +46,28 @@ void LEDPanel::displayFlag(enum Language language)
             // draw German flag
             drawGermany();
             break;
+        case SPANISH:
+            // draw Spanish flag
+            drawSpain();
+            break;
+        case CHINESE:
+            // draw Chinese flag
+            drawChina();
+            break;
         default:
-            drawBlank();
+            drawCustom();
             // draw something unique
     }
+}
+
+void LEDPanel::triggerTranslationStatus(bool startingTranslation)
+{
+    if (startingTranslation){
+        drawBlank();
+        drawLoading();
+    }
+    isTranslationOccuring = startingTranslation;
+    
 }
 
 void LEDPanel::sleepForMs(long long delayInMs)
@@ -53,7 +81,7 @@ void LEDPanel::sleepForMs(long long delayInMs)
     nanosleep(&reqDelay, (struct timespec *)NULL);
 }
 
-// From sample code
+// From sample code written by Janet Mardjuki and Jasper Wong
 void LEDPanel::initializeGPIOPins()
 {
     // !Upper led
@@ -245,16 +273,42 @@ void LEDPanel::drawCanada()
 {
     for (int y = 0; y < NUM_ROWS; y++){
         for (int x = 0; x < NUM_COLS; x++){
-            if ((x == 15 || x == 16) && (y == 7 || y == 8)){
-                screen[x][y] = 1; //red
-            } else if (x <= 9){
-                screen[x][y] = 1; //red
-            } else if (x >= 22) {
+            if (x <= 6 || x >= 24){
                 screen[x][y] = 1; //red
             } else {
                 screen[x][y] = 7; //white
             }
         }
+    }
+    //col 11
+    for (int y = 6; y <= 8; y++){
+        screen[11][y] = 1;
+    }
+    for (int y = 6; y <= 11; y++){
+        if (y != 10)
+            screen[12][y] = 1;
+    }
+    for (int y = 7; y <= 10; y++){
+        screen[13][y] = 1;
+    }
+    for (int y = 4; y <= 10; y++){
+        screen[14][y] = 1;
+    }
+    for (int y = 3; y <= 12; y++){
+        screen[15][y] = 1;
+    }
+    for (int y = 4; y <= 10; y++){
+        screen[16][y] = 1;
+    }
+    for (int y = 7; y <= 10; y++){
+        screen[17][y] = 1;
+    }
+    for (int y = 6; y <= 11; y++){
+        if (y != 10)
+            screen[18][y] = 1;
+    }
+    for (int y = 6; y <= 8; y++){
+        screen[19][y] = 1;
     }
 }
 
@@ -288,15 +342,106 @@ void LEDPanel::drawGermany()
     }
 }
 
+void LEDPanel::drawSpain()
+{
+    for (int y = 0; y < NUM_ROWS; y++){
+        for (int x = 0; x < NUM_COLS; x++){
+            if (y <= 3 || y >= 12){
+                screen[x][y] = 1; //red
+            } else {
+                screen[x][y] = 3; //yellow
+            }
+        }
+    }
+    screen[2][5] = 4;
+    screen[2][10] = 4;
+    screen[9][5] = 4;
+    screen[9][10] = 4;
+    screen[2][7] = 7;
+    screen[2][9] = 7;
+    screen[9][7] = 7;
+    screen[9][9] = 7;
+    screen[5][5] = 1;
+    screen[6][5] = 1;
+    screen[5][10] = 7;
+    screen[6][10] = 1;
+    for (int x = 2; x <= 9; x++){
+        if (x == 6 || x == 7){
+            screen[x][6] = 7;
+        } else {
+            screen[x][6] = 1;
+        }
+    }
+    for (int x = 4; x <= 7; x++){
+        if (x == 6 || x == 7){
+            screen[x][7] = 7;
+        } else {
+            screen[x][7] = 1;
+        }
+    }
+    for (int x = 2; x <= 9; x++){
+        if (x == 4 || x == 5){
+            screen[x][8] = 7;
+        } else {
+            screen[x][8] = 1;
+        }
+    }
+    for (int x = 4; x <= 7; x++){
+        if (x == 4 || x == 5){
+            screen[x][9] = 7;
+        } else {
+            screen[x][9] = 1;
+        }
+    }
+}
+
+void LEDPanel::drawChina()
+{
+    for (int y = 0; y < NUM_ROWS; y++){
+        for (int x = 0; x < NUM_COLS; x++){
+            screen[x][y] = 1; //red
+        }
+    }
+    //colour some additional pixels
+    screen[9][1] = 3;
+    screen[11][3] = 3;
+    screen[11][6] = 3;
+    screen[9][8] = 3;
+    for (int y = 2; y <= 5; y++){
+        screen[4][y] = 3;
+    }
+    for (int x = 2; x <= 6; x++){
+        screen[x][4] = 3;
+    }
+    screen[3][5] = 3;
+    screen[3][6] = 3;
+    screen[5][5] = 3;
+    screen[5][6] = 3;
+}
+
+void LEDPanel::drawCustom()
+{
+    for (int y = 0; y < NUM_ROWS; y++){
+        for (int x = 0; x < NUM_COLS; x++){
+            screen[x][y] = x;
+        }
+    }
+}
+
 void LEDPanel::drawBlank()
 {
-    // for (int y = 0; y < NUM_ROWS; y++){
-    //     for (int x = 0; x < NUM_COLS; x++){
-    //         screen[x][y] = 0; //off
-    //     }
-    // }
-    int y = 0;
-    for (int x = 0; x < 8; x++){
-        screen[x][y] = x;
+    for (int y = 0; y < NUM_ROWS; y++){
+        for (int x = 0; x < NUM_COLS; x++){
+            screen[x][y] = 0; //off
+        }
+    }
+}
+
+void LEDPanel::drawLoading()
+{
+    for (int y = 0; y < 8; y++){
+        if (y % 2 == 0){
+            screen[0][y] = 7;
+        }
     }
 }

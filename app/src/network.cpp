@@ -26,13 +26,14 @@ Network::Network() {
 }
 
 Network::Network(ShutdownManager *shutdownInstance, LanguageManager *languageManagerInstance, TextToSpeech *textInstance, 
-            Translator *translatorInstance, AudioMixer *audioInstance) {
+            Translator *translatorInstance, AudioMixer *audioInstance, LEDPanel *ledDisplayInstance) {
     isRunning = true;
     shutdownManager = shutdownInstance;
     languageManager = languageManagerInstance;
     textToSpeech = textInstance;
     translator = translatorInstance;
     audioMixer = audioInstance;
+    ledPanel = ledDisplayInstance;
 
     networkThreadId = std::thread([this]() {
         this->networkThread(nullptr);
@@ -136,6 +137,7 @@ void Network::sendReply(enum Command command, char *input, int length, int socke
                 message[511] = '\0';
                 translator->updateCurrentMessageTextFile(message);
 
+                ledPanel->triggerTranslationStatus(true);
                 for(enum Language currentLanguage : languageManager->getDefaultLanguages()) {
                     std::string filename = languageManager->getWavFilename(currentLanguage);
 
@@ -149,6 +151,8 @@ void Network::sendReply(enum Command command, char *input, int length, int socke
 
                     audioMixer->readWaveFileIntoMemory(filename, currentLanguage);
                 }
+                ledPanel->triggerTranslationStatus(false);
+                ledPanel->displayFlag(languageManager->getCurrentLanguage());
             }
             snprintf(messageTx, MAX_LEN, "currentMessage;%s", message);
             break;
@@ -207,13 +211,17 @@ void Network::sendReply(enum Command command, char *input, int length, int socke
             std::string filename = languageManager->getWavFilename(language);
             std::cout << "Filename: " << filename << "\n";
 
+            
             // defaultMessage if ENGLISH, otherwise translate
             std::string newMessage = language == ENGLISH ? message
                 : translator->translateToLanguage(message, language);
 
+            ledPanel->triggerTranslationStatus(true);
             pthread_mutex_lock(&audioMixer->fileAccessMutex);
             textToSpeech->translateToWave(newMessage, language, filename, gender);
             pthread_mutex_unlock(&audioMixer->fileAccessMutex);
+            ledPanel->triggerTranslationStatus(false);
+            ledPanel->displayFlag(languageManager->getCurrentLanguage());
 
             audioMixer->readWaveFileIntoMemory(filename, language);
             
