@@ -5,9 +5,9 @@
 #define _STATE_READER_HPP_
 
 #include "hal/display.hpp"
-// #include "hal/segDisplay.hpp"
 #include "hal/potController.hpp"
 #include "hal/audioMixer.hpp"
+#include "hal/pruDriver.hpp"
 
 class StateReader {
     public:
@@ -17,6 +17,7 @@ class StateReader {
         std::thread stateReaderThreadId;
         Display display;
         PotController potController;
+        PruDriver pruDriver;
         AudioMixer *audioMixer;
 
         int i2cFileDesc;        
@@ -24,6 +25,7 @@ class StateReader {
         bool isRunning = false;
         void *stateReaderThread(void *arg);
         void sleepForMs(long long delayInMs);
+        long long getCurrentTimeMs();
 };
 
 
