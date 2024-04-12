@@ -26,9 +26,13 @@ public:
 	// Get the filename for a specific language
 	std::string getWavFilename(enum Language language);
 	std::vector<enum Language> getDefaultLanguages(void);
+	void cycleLanguage(void);
+	enum Language getCurrentLanguage(void);
+	void setLanguage(enum Language newLanguage);
 private:
 	std::unordered_map<int, std::string> audioFilenames;
 	std::vector<enum Language> defaultLanguages = {ENGLISH, FRENCH, GERMAN, SPANISH, CHINESE};
+	int currentLanguageIndex;
 };
 
 #endif

@@ -8,10 +8,11 @@
 #include "hal/potController.hpp"
 #include "hal/audioMixer.hpp"
 #include "hal/pruDriver.hpp"
+#include "hal/ledPanel.hpp"
 
 class StateReader {
     public:
-        StateReader(AudioMixer *audioMixerInstance);
+        StateReader(AudioMixer *audioMixerInstance, LanguageManager *languageManagerInstance, LEDPanel *ledPanelInstance);
         ~StateReader();
     private:
         std::thread stateReaderThreadId;
@@ -19,6 +20,8 @@ class StateReader {
         PotController potController;
         PruDriver pruDriver;
         AudioMixer *audioMixer;
+        LanguageManager *languageManager;
+        LEDPanel *ledPanel;
 
         int i2cFileDesc;        
 

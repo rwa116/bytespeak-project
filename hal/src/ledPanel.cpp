@@ -5,7 +5,7 @@ LEDPanel::LEDPanel()
     assert(!isInitialized);
     memset(screen, 0, sizeof(screen));
     initializeGPIOPins();
-    drawBlank();
+    drawCanada();
     renderingThreadID = std::thread([this]() {
         this->renderThreadFunction(nullptr);
     });
@@ -26,7 +26,6 @@ void LEDPanel::displayFlag(enum Language language)
     switch(language){
         case ENGLISH:
             // draw Canada flag
-            printf("drawing CANADA!!!\n");
             drawCanada();
             break;
         case FRENCH:
