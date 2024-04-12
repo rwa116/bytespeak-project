@@ -10,6 +10,7 @@ public:
     bool isRightPressed();
     bool isDownPressed();
 private:
+    volatile void *pPruBase;
     volatile sharedMemStruct_t *pSharedPru0;
 
     volatile void* getPruMmapAddr(void);

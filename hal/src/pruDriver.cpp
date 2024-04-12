@@ -25,12 +25,12 @@
 PruDriver::PruDriver() {
     system("config-pin P8_15 pruin");
     system("config-pin P8_16 pruin");
-    volatile void *pPruBase = getPruMmapAddr();
+    pPruBase = getPruMmapAddr();
     pSharedPru0 = (volatile sharedMemStruct_t *)(PRU0_MEM_FROM_BASE(pPruBase));
 }
 
 PruDriver::~PruDriver() {
-    freePruMmapAddr((void*) pSharedPru0);
+    freePruMmapAddr((void*) pPruBase);
 }
 
 bool PruDriver::isRightPressed() {
