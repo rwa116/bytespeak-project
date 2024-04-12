@@ -9,8 +9,8 @@
  * @param device The device name or path.
  * @param address The address of the NFC reader.
  */
-NFCReader::NFCReader(const char *device, int address)
-    : device(device), fileDescriptor(-1), address(address)
+NFCReader::NFCReader(const char *device, int address, ShutdownManager *shutdownManager)
+    : device(device), fileDescriptor(-1), address(address), shutdownManager(shutdownManager)
 {
     // config pin
     system("config-pin P9_19 i2c");
@@ -137,7 +137,7 @@ bool NFCReader::sendCommandAndWaitForResponse(unsigned char *command, int comman
             return false;
         }
 
-    } while (bytesRead == 0 || (int)response[0] == 0);
+    } while (bytesRead == 0 || (int)response[0] == 0 || !shutdownManager->isShutdown());
 
 
  

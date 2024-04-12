@@ -51,7 +51,7 @@ int main() {
     ShutdownManager shutdownManager;
     StateReader stateReader(&audioMixer, &languageManager, &ledDisplay);
     Network network(&shutdownManager, &languageManager, &textToSpeech, &translator, &audioMixer);
-    NFCReader reader("/dev/i2c-2", 0x24);
+    NFCReader reader("/dev/i2c-2", 0x24, &shutdownManager);
 
     // Main loop
     while(!shutdownManager.isShutdown()) {
